@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - Lyko Lake</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0a4d4d 0%, #1a6b6b 50%, #0f3d3d 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-container {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(34, 197, 164, 0.3);
+            border-radius: 20px;
+            padding: 50px 40px;
+            max-width: 450px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .logo-link {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-text {
+            font-size: 2em;
+            font-weight: bold;
+            color: #22c5a4;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #22c5a4 0%, #4dd4b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 30px;
+        }
+
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(34, 197, 164, 0.2);
+            border-radius: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .tab:hover {
+            background: rgba(34, 197, 164, 0.1);
+        }
+
+        .tab.active {
+            background: rgba(34, 197, 164, 0.2);
+            border-color: #22c5a4;
+            color: #22c5a4;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(34, 197, 164, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #22c5a4;
+            background: rgba(34, 197, 164, 0.1);
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 15px;
+            background: rgba(34, 197, 164, 0.2);
+            border: 2px solid #22c5a4;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .submit-button:hover {
+            background: #22c5a4;
+            color: #0a4d4d;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(34, 197, 164, 0.4);
+        }
+
+        .submit-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            background: rgba(255, 59, 48, 0.2);
+            border: 2px solid rgba(255, 59, 48, 0.5);
+            color: #ff3b30;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message {
+            background: rgba(52, 199, 89, 0.2);
+            border: 2px solid rgba(52, 199, 89, 0.5);
+            color: #34c759;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .auth-container {
+                padding: 40px 30px;
+            }
+
+            h2 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="logo-link">
+            <a href="/" class="logo-text">🌊 Lyko Lake</a>
+        </div>
+
+        <h2>Welcome</h2>
+        <p class="subtitle">Sign in or create an account</p>
+
+        <div class="tab-container">
+            <div class="tab active" onclick="switchTab('login')">Login</div>
+            <div class="tab" onclick="switchTab('register')">Register</div>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+
+        <!-- Login Form -->
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="loginEmail">Email</label>
+                <input type="email" id="loginEmail" placeholder="your@email.com" required>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter your password" required>
+            </div>
+            <button type="submit" class="submit-button" id="loginButton">Sign In</button>
+        </form>
+
+        <!-- Register Form -->
+        <form id="registerForm" class="hidden">
+            <div class="form-group">
+                <label for="registerEmail">Email</label>
+                <input type="email" id="registerEmail" placeholder="your@email.com" required>
+            </div>
+            <div class="form-group">
+                <label for="registerPassword">Password</label>
+                <input type="password" id="registerPassword" placeholder="At least 6 characters" required>
+            </div>
+            <div class="form-group">
+                <label for="registerPasswordConfirm">Confirm Password</label>
+                <input type="password" id="registerPasswordConfirm" placeholder="Re-enter password" required>
+            </div>
+            <button type="submit" class="submit-button" id="registerButton">Create Account</button>
+        </form>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        // TODO: Replace with your Firebase config
+        // Get this from Firebase Console -> Project Settings -> Your apps
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Check if user is already logged in
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in, redirect to home
+                showSuccess('Already logged in! Redirecting...');
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1500);
+            }
+        });
+
+        // Tab switching
+        window.switchTab = function(tab) {
+            const tabs = document.querySelectorAll('.tab');
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            
+            tabs.forEach(t => t.classList.remove('active'));
+            
+            if (tab === 'login') {
+                tabs[0].classList.add('active');
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+            } else {
+                tabs[1].classList.add('active');
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+            }
+            
+            hideMessages();
+        };
+
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const button = document.getElementById('loginButton');
+            
+            button.disabled = true;
+            button.textContent = 'Signing in...';
+            hideMessages();
+            
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                showSuccess('Login successful! Redirecting...');
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1500);
+            } catch (error) {
+                showError(getErrorMessage(error.code));
+                button.disabled = false;
+                button.textContent = 'Sign In';
+            }
+        });
+
+        // Register
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerPasswordConfirm').value;
+            const button = document.getElementById('registerButton');
+            
+            hideMessages();
+            
+            if (password !== confirmPassword) {
+                showError('Passwords do not match!');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters!');
+                return;
+            }
+            
+            button.disabled = true;
+            button.textContent = 'Creating account...';
+            
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                showSuccess('Account created! Redirecting...');
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1500);
+            } catch (error) {
+                showError(getErrorMessage(error.code));
+                button.disabled = false;
+                button.textContent = 'Create Account';
+            }
+        });
+
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        function showSuccess(message) {
+            const successEl = document.getElementById('successMessage');
+            successEl.textContent = message;
+            successEl.style.display = 'block';
+        }
+
+        function hideMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        function getErrorMessage(code) {
+            switch (code) {
+                case 'auth/email-already-in-use':
+                    return 'This email is already registered!';
+                case 'auth/invalid-email':
+                    return 'Invalid email address!';
+                case 'auth/weak-password':
+                    return 'Password is too weak!';
+                case 'auth/user-not-found':
+                    return 'No account found with this email!';
+                case 'auth/wrong-password':
+                    return 'Incorrect password!';
+                case 'auth/invalid-credential':
+                    return 'Invalid email or password!';
+                default:
+                    return 'An error occurred. Please try again.';
+            }
+        }
+    </script>
+</body>
+</html>
