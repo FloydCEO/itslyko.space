@@ -54,8 +54,9 @@ h1{font-size:2.5em;margin:20px 0 10px}
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-import {getFirestore,collection,getDocs,doc,updateDoc,setDoc,serverTimestamp,deleteDoc} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import {getFirestore,collection,getDocs,doc,getDoc,updateDoc,setDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
+/* ----------  your short-name config  ---------- */
 const cfg={
   apiKey:"AIzaSyDUBeWvs6kOijqST6FVGirWs2EZ12aAAwU",
   authDomain:"lyko-lake.firebaseapp.com",
@@ -68,11 +69,11 @@ const app=initializeApp(cfg);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
+/* ----------  rest of the file unchanged  ---------- */
 const $=q=>document.querySelector(q);
 const usersGrid=$('#usersGrid');
 const modal=$('#modal'),modalTitle=$('#modalTitle'),modalBody=$('#modalBody'),
       modalCancel=$('#modalCancel'),modalConfirm=$('#modalConfirm');
-
 let currentRow;
 const hide=()=>modal.classList.add('hidden');
 const show=(title,body)=>{
@@ -189,5 +190,3 @@ window.rankUser=async uid=>{
   };
 };
 </script>
-</body>
-</html>
