@@ -24,6 +24,45 @@
             position: relative;
         }
 
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a4d4d 0%, #1a6b6b 50%, #0f3d3d 100%);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .loading-overlay.hidden {
+            display: none;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(34, 197, 164, 0.2);
+            border-top-color: #22c5a4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            font-size: 1.5em;
+            color: #22c5a4;
+            font-weight: 600;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         /* Glitch screen overlay */
         .glitch-overlay {
             position: fixed;
@@ -566,6 +605,12 @@
     </style>
 </head>
 <body>
+    <!-- Loading overlay for profile check -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading Profile...</div>
+    </div>
+
     <div class="glitch-overlay"></div>
     <div class="static"></div>
 
@@ -573,7 +618,7 @@
     <div class="wave">🌊</div>
     <div class="wave">🌊</div>
 
-    <div class="container">
+    <div class="container" id="errorContainer">
         <div class="error-code">404</div>
         
         <h1 class="main-text">Yo, We're Cooked 💀</h1>
@@ -591,7 +636,7 @@
 
         <div class="vibe-check">
             <p class="vibe-text">
-                <strong>Real talk:</strong> This page doesn't exist (yet). But don't trip, 
+                <strong>Real talk:</strong> This page doesn't exist. But don't trip, 
                 the lake's still vibing. Either you typed something wrong or we haven't 
                 built this part of the site yet. No cap, we're working on it fr fr. 🙏
             </p>
@@ -603,20 +648,62 @@
         </div>
     </div>
 
-    <script>
-        // Auto-redirect for profile URLs
-        const path = window.location.pathname.split('/').filter(p => p)[0];
-        
-        // If it looks like it might be a username (single path segment, no extension)
-        if (path && !path.includes('.')) {
-            // Wait 3 seconds then redirect to profile page
-            setTimeout(() => {
-                const tryProfile = confirm(`Looking for @${path}? Click OK to check their profile, or Cancel to stay here.`);
-                if (tryProfile) {
-                    window.location.href = `/profile.html?u=${path}`;
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDUBeWvs6kOijqST6FVGirWs2EZ12aAAwU",
+            authDomain: "lyko-lake.firebaseapp.com",
+            projectId: "lyko-lake",
+            storageBucket: "lyko-lake.firebasestorage.app",
+            messagingSenderId: "685592614306",
+            appId: "1:685592614306:web:b6a8f6f18407f9c0154efb",
+            measurementId: "G-QN0H7E9NEQ"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const errorContainer = document.getElementById('errorContainer');
+
+        // Check if this looks like a profile URL
+        async function checkForProfile() {
+            const path = window.location.pathname.split('/').filter(p => p)[0];
+            
+            // If it looks like it might be a username (single path segment, no extension)
+            if (path && !path.includes('.')) {
+                try {
+                    // Check if this username exists in the database
+                    const usernameDoc = await getDoc(doc(db, 'usernames', path.toLowerCase()));
+                    
+                    if (usernameDoc.exists()) {
+                        // Username exists! Redirect to profile page
+                        window.location.href = `/profile.html?u=${path}`;
+                    } else {
+                        // Username doesn't exist, show 404
+                        showError();
+                    }
+                } catch (error) {
+                    console.error('Error checking username:', error);
+                    // On error, show 404
+                    showError();
                 }
-            }, 3000);
+            } else {
+                // Not a profile URL, show 404
+                showError();
+            }
         }
+
+        function showError() {
+            loadingOverlay.classList.add('hidden');
+            errorContainer.style.display = 'block';
+        }
+
+        // Start the check immediately
+        checkForProfile();
     </script>
 </body>
 </html>
