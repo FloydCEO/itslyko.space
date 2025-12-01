@@ -9,13 +9,11 @@
         body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
              background:linear-gradient(135deg,#0a4d4d 0%,#1a6b6b 50%,#0f3d3d 100%);color:#fff;min-height:100vh}
         .hidden{display:none !important}
-
         nav{background:rgba(10,77,77,.95);backdrop-filter:blur(10px);padding:20px 40px;display:flex;justify-content:space-between;align-items:center;
             position:sticky;top:0;z-index:1000;box-shadow:0 4px 20px rgba(0,0,0,.3);border-bottom:2px solid rgba(34,197,164,.3)}
         .logo{font-size:1.8em;font-weight:bold;color:#22c5a4;text-decoration:none;display:flex;align-items:center;gap:10px}
         .auth-button{background:rgba(34,197,164,.2);border:2px solid #22c5a4;color:#fff;padding:10px 30px;border-radius:8px;text-decoration:none;font-weight:600;transition:all .3s ease}
         .auth-button:hover{background:#22c5a4;color:#0a4d4d;transform:translateY(-2px)}
-
         .user-menu{position:relative}
         .user-button{background:rgba(34,197,164,.2);border:2px solid #22c5a4;color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;
                     display:flex;align-items:center;gap:10px;transition:all .3s ease}
@@ -31,7 +29,6 @@
         .dropdown-item:hover{background:rgba(34,197,164,.2);color:#22c5a4}
         .dropdown-item.logout{color:#ff3b30}
         .dropdown-item.logout:hover{background:rgba(255,59,48,.2)}
-
         .container{max-width:900px;margin:0 auto;padding:40px 20px}
         .loading{text-align:center;padding:100px 20px;font-size:1.2em;color:rgba(255,255,255,.7)}
         .page-title{text-align:center;margin-bottom:40px}
@@ -44,7 +41,6 @@
         .tooltip-line{display:flex;align-items:center;gap:8px;margin-bottom:8px;color:rgba(255,255,255,.9);font-size:.95em}
         .tooltip-line:last-child{margin-bottom:0}
         .tooltip-label{color:#22c5a4;font-weight:600}
-
         .profile-header{background:rgba(255,255,255,.05);border:2px solid rgba(34,197,164,.3);border-radius:20px;padding:40px;
                        margin-bottom:30px;backdrop-filter:blur(10px);text-align:center;position:relative}
         .profile-avatar{width:150px;height:150px;border-radius:50%;background:linear-gradient(135deg,#22c5a4 0%,#0a8f7a 100%);
@@ -106,6 +102,8 @@
         .modal-message.error{background:rgba(255,59,48,.2);border:2px solid rgba(255,59,48,.5);color:#ff3b30}
         .modal-message.success{background:rgba(52,199,89,.2);border:2px solid rgba(52,199,89,.5);color:#34c759}
 
+        /* ---------- NEW: BANNED badge ---------- */
+        .rank.banned{background:#ff3b30;box-shadow:0 0 10px #ff3b30;}
         @keyframes fadeIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
         @media(max-width:768px){.profile-header{padding:30px 20px}.page-title h1{font-size:2.5em}.profile-display-name{font-size:2em}.profile-avatar{width:120px;height:120px;font-size:3em}}
     </style>
@@ -120,6 +118,7 @@
         <button class="user-button" id="userButton">
             <div class="user-avatar"><img id="navAvatarImg" src="" alt="A"></div>
             <span id="navDisplayName">Loading…</span>
+            <span class="rank" id="navRank" style="display:none;margin-left:6px;padding:2px 8px;border-radius:999px;font-size:.7em;font-weight:600"></span>
         </button>
         <div class="dropdown" id="dropdown">
             <a class="dropdown-item" id="navProfileLink"><span>👤</span><span>Profile</span></a>
@@ -146,7 +145,10 @@
 
         <div class="profile-header">
             <div class="profile-avatar" id="profileAvatar"><img id="profileAvatarImg" src="" alt="Profile"></div>
-            <h2 class="profile-display-name" id="displayName">Loading…</h2>
+            <h2 class="profile-display-name" id="displayName">
+                Loading…
+                <span class="rank" id="profileRank" style="display:none;margin-left:8px;padding:4px 10px;border-radius:999px;font-size:.75em;font-weight:600"></span>
+            </h2>
             <div class="profile-username" id="username">@loading</div>
             <div class="profile-uid" id="uid">User #0</div>
         </div>
@@ -296,6 +298,23 @@ function closeUploadModal() {
 onAuthStateChanged(auth, async user => {
     authUser = user;
     if (user && user.emailVerified) {
+        const ban = await getDoc(doc(db, 'bans', user.uid));
+        if (ban.exists()) {
+            const { until, reason } = ban.data();
+            const now = Date.now();
+            if (!until || now < until.toMillis()) {
+                const time = until ? new Date(until.toMillis()).toLocaleString() : 'permanent';
+                document.body.innerHTML = `
+                  <style>body{background:#0a4d4d;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;text-align:center}</style>
+                  <div>
+                    <h1>🚫 Banned</h1>
+                    <p>Sorry, you are banned for reason: <strong>${reason || 'No reason given'}</strong></p>
+                    <p>Ban expires: <strong>${time}</strong></p>
+                    <a href="/" style="color:#22c5a4">Go Home</a>
+                  </div>`;
+                return;
+            }
+        }
         const snap = await getDoc(doc(db, 'users', user.uid));
         if (snap.exists()) {
             const d = snap.data();
@@ -303,9 +322,15 @@ onAuthStateChanged(auth, async user => {
             userMenu.classList.remove('hidden');
             navDisplayName.textContent = d.displayName;
             navProfileLink.href = `/profile.html?u=${d.username}`;
-            if (d.avatar) {
-                navAvatarImg.src = d.avatar;
-                navAvatarImg.style.display = 'block';
+            if (d.avatar) navAvatarImg.src = d.avatar;
+            navAvatarImg.style.display = 'block';
+            if (d.rank) {
+                navRank.textContent = d.rank;
+                navRank.style.display = 'inline-block';
+                navRank.style.background = d.rank === 'CEO' ? '#ff3b30' : '#34c759';
+                navRank.style.color = '#fff';
+                navRank.style.boxShadow = d.rank === 'CEO' ? '0 0 10px #ff3b30' : 'none';
+                navRank.style.animation = d.rank === 'CEO' ? 'vibe .8s infinite alternate' : 'none';
             }
         }
     } else {
@@ -378,6 +403,16 @@ function renderProfile(data) {
     } else {
         bioText.textContent = 'This user hasn\'t written a bio yet.';
         bioText.classList.add('bio-placeholder');
+    }
+
+    /* ---------- NEW: rank badge in profile header ---------- */
+    const pRank = document.getElementById('profileRank');
+    if (data.rank) {
+        pRank.style.display = 'inline-block';
+        pRank.textContent = data.rank;
+        pRank.className = 'rank ' + (data.rank === 'CEO' ? 'ceo' : 'admin');
+    } else {
+        pRank.style.display = 'none';
     }
 
     if (isOwnProfile) {
