@@ -5,21 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile – Lyko Lake</title>
     <style>
-        /* --------------  RESET  -------------- */
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
              background:linear-gradient(135deg,#0a4d4d 0%,#1a6b6b 50%,#0f3d3d 100%);color:#fff;min-height:100vh}
         .hidden{display:none !important}
 
-        /* --------------  NAV  -------------- */
         nav{background:rgba(10,77,77,.95);backdrop-filter:blur(10px);padding:20px 40px;display:flex;justify-content:space-between;align-items:center;
             position:sticky;top:0;z-index:1000;box-shadow:0 4px 20px rgba(0,0,0,.3);border-bottom:2px solid rgba(34,197,164,.3)}
         .logo{font-size:1.8em;font-weight:bold;color:#22c5a4;text-decoration:none;display:flex;align-items:center;gap:10px}
-
         .auth-button{background:rgba(34,197,164,.2);border:2px solid #22c5a4;color:#fff;padding:10px 30px;border-radius:8px;text-decoration:none;font-weight:600;transition:all .3s ease}
         .auth-button:hover{background:#22c5a4;color:#0a4d4d;transform:translateY(-2px)}
 
-        /* --------------  USER MENU  -------------- */
         .user-menu{position:relative}
         .user-button{background:rgba(34,197,164,.2);border:2px solid #22c5a4;color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;
                     display:flex;align-items:center;gap:10px;transition:all .3s ease}
@@ -36,10 +32,9 @@
         .dropdown-item.logout{color:#ff3b30}
         .dropdown-item.logout:hover{background:rgba(255,59,48,.2)}
 
-        /* --------------  PROFILE  -------------- */
         .container{max-width:900px;margin:0 auto;padding:40px 20px}
         .loading{text-align:center;padding:100px 20px;font-size:1.2em;color:rgba(255,255,255,.7)}
-        .page-title{text-align:center;margin-bottom:40px;position:relative;cursor:help}
+        .page-title{text-align:center;margin-bottom:40px}
         .page-title h1{font-size:4em;font-weight:bold;background:linear-gradient(135deg,#22c5a4 0%,#4dd4b8 100%);-webkit-background-clip:text;
                       -webkit-text-fill-color:transparent;background-clip:text;display:inline-block;animation:fadeIn .6s ease-out}
         .hover-tooltip{position:fixed;background:rgba(10,77,77,.98);border:2px solid #22c5a4;border-radius:12px;padding:15px 20px;
@@ -60,7 +55,7 @@
         .profile-avatar.editable:hover::after{content:"📷 Change Photo";position:absolute;inset:0;background:rgba(0,0,0,.7);
                                            display:flex;align-items:center;justify-content:center;font-size:.8em;color:#fff;border-radius:50%}
         .profile-display-name{font-size:2.5em;font-weight:bold;margin-bottom:10px;background:linear-gradient(135deg,#22c5a4 0%,#4dd4b8 100%);
-                             -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+                             -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;position:relative;display:inline-block}
         .profile-username{font-size:1.3em;color:rgba(255,255,255,.6);margin-bottom:15px}
         .profile-uid{display:inline-block;background:rgba(34,197,164,.2);border:2px solid rgba(34,197,164,.5);color:#22c5a4;
                     padding:8px 20px;border-radius:20px;font-weight:600;font-size:1.1em}
@@ -85,7 +80,6 @@
                      padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:600;transition:all .3s ease}
         .cancel-button:hover{background:rgba(255,255,255,.2)}
 
-        /* --------------  MODAL  -------------- */
         .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;
                       z-index:10000;backdrop-filter:blur(5px)}
         .modal{background:rgba(10,77,77,.95);border:2px solid rgba(34,197,164,.3);border-radius:20px;padding:30px;
@@ -112,10 +106,7 @@
         .modal-message.error{background:rgba(255,59,48,.2);border:2px solid rgba(255,59,48,.5);color:#ff3b30}
         .modal-message.success{background:rgba(52,199,89,.2);border:2px solid rgba(52,199,89,.5);color:#34c759}
 
-        /* --------------  ANIMATIONS  -------------- */
         @keyframes fadeIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
-
-        /* --------------  MOBILE  -------------- */
         @media(max-width:768px){.profile-header{padding:30px 20px}.page-title h1{font-size:2.5em}.profile-display-name{font-size:2em}.profile-avatar{width:120px;height:120px;font-size:3em}}
     </style>
 </head>
@@ -142,7 +133,7 @@
     <div class="loading" id="loading">Loading profile…</div>
 
     <div class="hidden" id="profileContent">
-        <div class="page-title" id="pageTitle">
+        <div class="page-title">
             <h1 id="titleName">Loading…</h1>
         </div>
 
@@ -270,11 +261,11 @@ const uploadButton = document.getElementById('uploadButton');
 const modalMessage = document.getElementById('modalMessage');
 
 /*  ------------------------  STATE  ------------------------  */
-let currentUserId = null; // owner of the profile we are viewing
+let currentUserId = null;
 let currentUsername = null;
-let isOwnProfile = false; // true only if auth user === profile owner
+let isOwnProfile = false;
 let selectedFile = null;
-let authUser = null; // cached auth user
+let authUser = null;
 
 /*  ------------------------  UTILS  ------------------------  */
 function showModalMessage(msg, type) {
@@ -304,7 +295,7 @@ function closeUploadModal() {
 
 /*  ------------------------  NAV + AUTH  ------------------------  */
 onAuthStateChanged(auth, async user => {
-    authUser = user; // cache
+    authUser = user;
     if (user && user.emailVerified) {
         const snap = await getDoc(doc(db, 'users', user.uid));
         if (snap.exists()) {
@@ -323,8 +314,7 @@ onAuthStateChanged(auth, async user => {
         userMenu.classList.add('hidden');
     }
 });
-logoutButton.addEventListener('click', () => signOut(auth).then(() => (window.location.href = '/')));
-
+logoutButton.addEventListener('click', () => signOut(auth).then(() => window.location.href = '/'));
 userButton.addEventListener('click', e => {
     e.stopPropagation();
     dropdown.classList.toggle('show');
@@ -368,13 +358,11 @@ function renderProfile(data) {
     document.title = `${data.displayName} (@${data.username}) – Lyko Lake`;
     titleName.textContent = data.displayName;
 
-    /*  --------  FILL TOOLTIP  --------  */
     tooltipUsername.textContent = data.username;
     tooltipUid.textContent = `#${data.uid}`;
     const join = data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
     tooltipJoined.textContent = join.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-    /*  --------  FILL PAGE  --------  */
     document.getElementById('displayName').textContent = data.displayName;
     document.getElementById('username').textContent = `@${data.username}`;
     document.getElementById('uid').textContent = `User #${data.uid}`;
@@ -393,7 +381,6 @@ function renderProfile(data) {
         bioText.classList.add('bio-placeholder');
     }
 
-    // editable only on own profile
     if (isOwnProfile) {
         bioText.classList.add('editable');
         profileAvatar.classList.add('editable');
@@ -409,6 +396,22 @@ function showError(msg) {
     errorContent.classList.remove('hidden');
 }
 
+/*  ------------------------  HOVER TOOLTIP ON DISPLAY NAME + AVATAR  ------------------------  */
+function attachTooltip(el) {
+    el.addEventListener('mouseenter', e => {
+        hoverTooltip.classList.add('show');
+        positionTooltip(e);
+    });
+    el.addEventListener('mousemove', positionTooltip);
+    el.addEventListener('mouseleave', () => hoverTooltip.classList.remove('show'));
+}
+function positionTooltip(e) {
+    hoverTooltip.style.left = (e.clientX + 15) + 'px';
+    hoverTooltip.style.top = (e.clientY + 15) + 'px';
+}
+attachTooltip(document.getElementById('displayName'));
+attachTooltip(profileAvatar);
+
 /*  ------------------------  BIO EDIT  ------------------------  */
 bioText.addEventListener('click', () => {
     if (!isOwnProfile) return;
@@ -417,20 +420,6 @@ bioText.addEventListener('click', () => {
     bioInput.value = bioText.textContent === 'This user hasn\'t written a bio yet.' ? '' : bioText.textContent;
     bioInput.focus();
 });
-bioText.addEventListener('mouseenter', e => {
-    if (!isOwnProfile) return;
-    hoverTooltip.classList.add('show');
-    hoverTooltip.style.left = (e.clientX + 15) + 'px';
-    hoverTooltip.style.top = (e.clientY + 15) + 'px';
-});
-bioText.addEventListener('mousemove', e => {
-    if (isOwnProfile) {
-        hoverTooltip.style.left = (e.clientX + 15) + 'px';
-        hoverTooltip.style.top = (e.clientY + 15) + 'px';
-    }
-});
-bioText.addEventListener('mouseleave', () => hoverTooltip.classList.remove('show'));
-
 cancelBioButton.addEventListener('click', () => {
     bioEdit.classList.add('hidden');
     bioDisplay.classList.remove('hidden');
