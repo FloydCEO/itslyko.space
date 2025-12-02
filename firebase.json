@@ -24,8 +24,8 @@
         "destination": "/profile.html"
       },
       {
-        "source": "/:username",
-        "destination": "/profile.html"
+        "source": "**",
+        "destination": "/index.html"
       }
     ]
   },
