@@ -1,4 +1,34 @@
 {
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/admin.html",
+        "destination": "/admin.html"
+      },
+      {
+        "source": "/auth.html",
+        "destination": "/auth.html"
+      },
+      {
+        "source": "/help.html",
+        "destination": "/help.html"
+      },
+      {
+        "source": "/profile.html",
+        "destination": "/profile.html"
+      },
+      {
+        "source": "/:username",
+        "destination": "/profile.html"
+      }
+    ]
+  },
   "storage": {
     "rules": "storage.rules"
   }
