@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Public read access for usernames
+    match /usernames/{username} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // User profiles - public read, owner write
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+      
+      // Admins and CEOs can update user data
+      allow update: if request.auth != null && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin', 'CEO']);
+    }
+    
+    // User counter - public read, only allow increment
+    match /metadata/userCounter {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // General metadata - public read
+    match /metadata/{document} {
+      allow read: if true;
+      allow write: if request.auth != null && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin', 'CEO']);
+    }
+    
+    // Bans collection - Admins/CEOs can manage
+    match /bans/{userId} {
+      allow read: if request.auth != null && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin', 'CEO']);
+      allow write: if request.auth != null && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin', 'CEO']);
+    }
+    
+    // Allow users to read their own auth status
+    match /auth/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
+    }
+  }
+}
