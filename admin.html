@@ -2,55 +2,357 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin – Lyko Lake</title>
 <style>
-:root{--ceo:#ff3b30;--admin:#34c759;--bg:#0a4d4d;--accent:#22c5a4}
-*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-body{background:linear-gradient(135deg,var(--bg) 0%,#1a6b6b 50%,#0f3d3d 100%);color:#fff;min-height:100vh;padding:30px}
-a.logo{font-size:1.8em;font-weight:bold;color:var(--accent);text-decoration:none;display:flex;align-items:center;gap:10px}
-h1{font-size:2.5em;margin:20px 0 10px}
-.users-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:25px;margin-top:30px}
-.user-card{background:rgba(255,255,255,.05);border:2px solid rgba(34,197,164,.3);border-radius:15px;padding:20px;text-align:center;backdrop-filter:blur(10px);transition:transform .3s,box-shadow .3s;cursor:pointer;position:relative;min-height:280px;display:flex;flex-direction:column}
-.user-card:hover{transform:translateY(-5px);box-shadow:0 10px 30px rgba(0,0,0,.4)}
-.user-card img.avatar{width:80px;height:80px;border-radius:50%;object-fit:cover;margin:0 auto 12px;background:var(--accent)}
-.user-card .display{font-size:1.2em;font-weight:600;word-wrap:break-word;margin-bottom:4px}
-.user-card .username{color:rgba(255,255,255,.6);margin:4px 0;font-size:.9em;word-wrap:break-word}
-.user-card .uid{font-size:.85em;color:rgba(255,255,255,.4);margin-bottom:auto;padding-bottom:12px}
-.rank{display:inline-block;padding:4px 10px;border-radius:999px;font-size:.75em;font-weight:600;margin-left:6px;position:relative}
-.rank.ceo{background:var(--ceo);box-shadow:0 0 10px var(--ceo);animation:vibe .8s infinite alternate}
-.rank.admin{background:var(--admin)}
-.rank.banned{background:#ff3b30;box-shadow:0 0 10px #ff3b30;}
-.rank:hover .info-box{opacity:1;visibility:visible}
-.info-box{position:absolute;top:-40px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.9);color:#fff;padding:6px 10px;border-radius:6px;font-size:.75em;white-space:nowrap;opacity:0;visibility:hidden;transition:opacity .2s;pointer-events:none;z-index:100}
-.actions{margin-top:auto;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
-.actions button{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:.75em;transition:all .2s;white-space:nowrap}
-.actions button:hover{background:rgba(255,255,255,.2);transform:translateY(-1px)}
-.actions button:disabled{opacity:.4;cursor:not-allowed}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:1000}
-.modal-content{background:#0a4d4d;border:2px solid var(--accent);border-radius:15px;padding:25px;width:90%;max-width:400px;max-height:90vh;overflow-y:auto}
-.modal h3{margin-bottom:15px}
-.modal input,.modal select,.modal textarea{width:100%;padding:8px;margin:6px 0;border-radius:6px;border:1px solid var(--accent);background:rgba(255,255,255,.05);color:#fff;font-family:inherit}
-.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:15px}
-.modal-actions button{background:rgba(34,197,164,.2);border:2px solid var(--accent);color:#fff;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:600;transition:all .3s}
-.modal-actions button:hover{background:var(--accent);color:#0a4d4d}
-.modal-actions button:first-child{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3)}
-.hidden{display:none}
-@keyframes vibe{to{transform:scale(1.05)}}
+:root{
+  --ceo:#ff3b30;
+  --admin:#34c759;
+  --bg:#0a4d4d;
+  --accent:#22c5a4;
+  --card-bg:rgba(255,255,255,0.05);
+  --border:rgba(34,197,164,0.3);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:linear-gradient(135deg,var(--bg) 0%,#1a6b6b 50%,#0f3d3d 100%);
+  color:#fff;
+  min-height:100vh;
+  padding:20px;
+}
+nav{
+  background:rgba(10,77,77,0.95);
+  backdrop-filter:blur(10px);
+  padding:20px 40px;
+  border-radius:15px;
+  margin-bottom:30px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border:2px solid var(--border);
+}
+.logo{
+  font-size:1.8em;
+  font-weight:bold;
+  color:var(--accent);
+  text-decoration:none;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+h1{
+  font-size:2.5em;
+  margin:20px 0;
+  background:linear-gradient(135deg,var(--accent) 0%,#4dd4b8 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.stats-bar{
+  display:flex;
+  gap:20px;
+  margin-bottom:30px;
+  flex-wrap:wrap;
+}
+.stat-card{
+  background:var(--card-bg);
+  border:2px solid var(--border);
+  border-radius:12px;
+  padding:20px;
+  flex:1;
+  min-width:200px;
+  backdrop-filter:blur(10px);
+}
+.stat-label{
+  color:rgba(255,255,255,0.6);
+  font-size:0.9em;
+  margin-bottom:8px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+}
+.stat-value{
+  font-size:2em;
+  font-weight:bold;
+  color:var(--accent);
+}
+.loading{
+  text-align:center;
+  padding:60px 20px;
+  font-size:1.2em;
+  color:rgba(255,255,255,0.7);
+}
+.error-message{
+  background:rgba(255,59,48,0.2);
+  border:2px solid rgba(255,59,48,0.5);
+  color:#ff3b30;
+  padding:20px;
+  border-radius:12px;
+  margin-bottom:20px;
+  text-align:center;
+}
+.users-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:20px;
+}
+.user-card{
+  background:var(--card-bg);
+  border:2px solid var(--border);
+  border-radius:15px;
+  padding:25px;
+  backdrop-filter:blur(10px);
+  transition:transform 0.3s,box-shadow 0.3s;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.user-card:hover{
+  transform:translateY(-5px);
+  box-shadow:0 10px 30px rgba(0,0,0,0.4);
+}
+.user-header{
+  display:flex;
+  align-items:center;
+  gap:15px;
+}
+.user-avatar{
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  background:var(--accent);
+  object-fit:cover;
+  flex-shrink:0;
+}
+.user-info{
+  flex:1;
+  min-width:0;
+}
+.user-display{
+  font-size:1.2em;
+  font-weight:600;
+  word-break:break-word;
+  margin-bottom:4px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.user-username{
+  color:rgba(255,255,255,0.6);
+  font-size:0.9em;
+  word-break:break-word;
+}
+.rank-badge{
+  display:inline-block;
+  padding:3px 8px;
+  border-radius:12px;
+  font-size:0.7em;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+.rank-badge.ceo{
+  background:var(--ceo);
+  box-shadow:0 0 10px var(--ceo);
+  animation:pulse 2s infinite;
+}
+.rank-badge.admin{
+  background:var(--admin);
+}
+.rank-badge.banned{
+  background:#ff3b30;
+  box-shadow:0 0 10px #ff3b30;
+}
+@keyframes pulse{
+  0%,100%{opacity:1}
+  50%{opacity:0.7}
+}
+.user-meta{
+  display:flex;
+  gap:15px;
+  font-size:0.85em;
+  color:rgba(255,255,255,0.5);
+  flex-wrap:wrap;
+}
+.user-meta span{
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+.actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:8px;
+}
+.btn{
+  background:rgba(255,255,255,0.1);
+  border:1px solid rgba(255,255,255,0.3);
+  color:#fff;
+  padding:8px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:0.85em;
+  font-weight:500;
+  transition:all 0.2s;
+  white-space:nowrap;
+}
+.btn:hover:not(:disabled){
+  background:rgba(255,255,255,0.2);
+  transform:translateY(-2px);
+}
+.btn:disabled{
+  opacity:0.4;
+  cursor:not-allowed;
+}
+.btn.danger{
+  border-color:rgba(255,59,48,0.5);
+  background:rgba(255,59,48,0.2);
+}
+.btn.danger:hover:not(:disabled){
+  background:rgba(255,59,48,0.3);
+}
+.btn.success{
+  border-color:rgba(52,199,89,0.5);
+  background:rgba(52,199,89,0.2);
+}
+.btn.success:hover:not(:disabled){
+  background:rgba(52,199,89,0.3);
+}
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.8);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+  padding:20px;
+}
+.modal.show{display:flex}
+.modal-content{
+  background:#0a4d4d;
+  border:2px solid var(--accent);
+  border-radius:15px;
+  padding:30px;
+  width:100%;
+  max-width:500px;
+  max-height:90vh;
+  overflow-y:auto;
+}
+.modal-header{
+  font-size:1.5em;
+  color:var(--accent);
+  margin-bottom:20px;
+  font-weight:600;
+}
+.form-group{
+  margin-bottom:20px;
+}
+.form-label{
+  display:block;
+  margin-bottom:8px;
+  color:rgba(255,255,255,0.9);
+  font-weight:500;
+}
+.form-input,
+.form-select,
+.form-textarea{
+  width:100%;
+  padding:12px;
+  border-radius:8px;
+  border:2px solid var(--border);
+  background:rgba(255,255,255,0.05);
+  color:#fff;
+  font-family:inherit;
+  font-size:1em;
+  transition:border-color 0.3s;
+}
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus{
+  outline:none;
+  border-color:var(--accent);
+  background:rgba(34,197,164,0.1);
+}
+.form-textarea{
+  resize:vertical;
+  min-height:80px;
+}
+.modal-actions{
+  display:flex;
+  gap:12px;
+  justify-content:flex-end;
+  margin-top:25px;
+}
+.modal-btn{
+  background:rgba(34,197,164,0.2);
+  border:2px solid var(--accent);
+  color:#fff;
+  padding:12px 24px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:600;
+  transition:all 0.3s;
+}
+.modal-btn:hover{
+  background:var(--accent);
+  color:#0a4d4d;
+}
+.modal-btn.secondary{
+  background:rgba(255,255,255,0.1);
+  border-color:rgba(255,255,255,0.3);
+}
+.modal-btn.secondary:hover{
+  background:rgba(255,255,255,0.2);
+  color:#fff;
+}
+.hidden{display:none!important}
+@media(max-width:768px){
+  body{padding:10px}
+  nav{padding:15px 20px}
+  h1{font-size:2em}
+  .users-grid{grid-template-columns:1fr}
+  .stat-card{min-width:100%}
+}
 </style>
 </head>
 <body>
-<a href="/" class="logo">🌊 Lyko Lake</a>
-<h1>Admin Panel</h1>
-<div id="usersGrid" class="users-grid">Loading users…</div>
 
-<!-- generic modal -->
-<div id="modal" class="modal hidden">
+<nav>
+  <a href="/" class="logo">🌊 Lyko Lake</a>
+</nav>
+
+<h1>Admin Panel</h1>
+
+<div class="stats-bar">
+  <div class="stat-card">
+    <div class="stat-label">Total Users</div>
+    <div class="stat-value" id="totalUsers">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Admins</div>
+    <div class="stat-value" id="totalAdmins">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Banned</div>
+    <div class="stat-value" id="totalBanned">0</div>
+  </div>
+</div>
+
+<div id="errorContainer"></div>
+<div id="loadingContainer" class="loading">Loading users...</div>
+<div id="usersGrid" class="users-grid"></div>
+
+<!-- Modal -->
+<div id="modal" class="modal">
   <div class="modal-content">
-    <h3 id="modalTitle"></h3>
+    <div class="modal-header" id="modalHeader">Action</div>
     <div id="modalBody"></div>
     <div class="modal-actions">
-      <button id="modalCancel">Cancel</button>
-      <button id="modalConfirm">Confirm</button>
+      <button class="modal-btn secondary" id="modalCancel">Cancel</button>
+      <button class="modal-btn" id="modalConfirm">Confirm</button>
     </div>
   </div>
 </div>
@@ -58,172 +360,332 @@ h1{font-size:2.5em;margin:20px 0 10px}
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-import {getFirestore,collection,getDocs,doc,getDoc,updateDoc,setDoc,serverTimestamp,deleteDoc,Timestamp} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import {getFirestore,collection,getDocs,doc,getDoc,updateDoc,setDoc,deleteDoc,serverTimestamp,Timestamp} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-const cfg={
-  apiKey:"AIzaSyDUBeWvs6kOijqST6FVGirWs2EZ12aAAwU",
-  authDomain:"lyko-lake.firebaseapp.com",
-  projectId:"lyko-lake",
-  storageBucket:"lyko-lake.firebasestorage.app",
-  messagingSenderId:"685592614306",
-  appId:"1:685592614306:web:b6a8f6f18407f9c0154efb"
+const firebaseConfig = {
+  apiKey: "AIzaSyDUBeWvs6kOijqST6FVGirWs2EZ12aAAwU",
+  authDomain: "lyko-lake.firebaseapp.com",
+  projectId: "lyko-lake",
+  storageBucket: "lyko-lake.firebasestorage.app",
+  messagingSenderId: "685592614306",
+  appId: "1:685592614306:web:b6a8f6f18407f9c0154efb"
 };
-const app=initializeApp(cfg);
-const auth=getAuth(app);
-const db=getFirestore(app);
 
-const $=q=>document.querySelector(q);
-const usersGrid=$('#usersGrid');
-const modal=$('#modal'),modalTitle=$('#modalTitle'),modalBody=$('#modalBody'),
-      modalCancel=$('#modalCancel'),modalConfirm=$('#modalConfirm');
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const usersGrid = document.getElementById('usersGrid');
+const loadingContainer = document.getElementById('loadingContainer');
+const errorContainer = document.getElementById('errorContainer');
+const modal = document.getElementById('modal');
+const modalHeader = document.getElementById('modalHeader');
+const modalBody = document.getElementById('modalBody');
+const modalCancel = document.getElementById('modalCancel');
+const modalConfirm = document.getElementById('modalConfirm');
+const totalUsersEl = document.getElementById('totalUsers');
+const totalAdminsEl = document.getElementById('totalAdmins');
+const totalBannedEl = document.getElementById('totalBanned');
 
 let currentAction = null;
+let allUsers = [];
 
-const hide=()=>{
-  modal.classList.add('hidden');
+function showError(msg) {
+  errorContainer.innerHTML = `<div class="error-message">${msg}</div>`;
+}
+
+function hideError() {
+  errorContainer.innerHTML = '';
+}
+
+function showModal(title, body, onConfirm) {
+  modalHeader.textContent = title;
+  modalBody.innerHTML = body;
+  currentAction = onConfirm;
+  modal.classList.add('show');
+}
+
+function hideModal() {
+  modal.classList.remove('show');
   currentAction = null;
-};
-const show=(title,body,confirmCallback)=>{
-  modalTitle.textContent=title;
-  modalBody.innerHTML=body;
-  modal.classList.remove('hidden');
-  currentAction = confirmCallback;
-};
+}
 
-modalCancel.onclick=hide;
-modalConfirm.onclick=async()=>{
-  if(currentAction){
-    await currentAction();
+modalCancel.onclick = hideModal;
+modalConfirm.onclick = async () => {
+  if (currentAction) {
+    try {
+      await currentAction();
+      hideModal();
+      await loadUsers();
+    } catch (e) {
+      showError(`Action failed: ${e.message}`);
+    }
   }
-  hide();
-  loadUsers();
 };
 
-/* ----------  PERM CHECK  ---------- */
-onAuthStateChanged(auth,async user=>{
-  if(!user) return location.href='/auth.html';
-  const me=(await getDoc(doc(db,'users',user.uid))).data();
-  if(me?.rank!=='CEO') location.href='/404.html';
-  else loadUsers();
+// Check permissions
+onAuthStateChanged(auth, async user => {
+  if (!user) {
+    window.location.href = '/auth.html';
+    return;
+  }
+  
+  try {
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    if (!userDoc.exists() || userDoc.data().rank !== 'CEO') {
+      showError('Access denied. CEO rank required.');
+      loadingContainer.classList.add('hidden');
+      return;
+    }
+    await loadUsers();
+  } catch (e) {
+    showError(`Permission check failed: ${e.message}`);
+    loadingContainer.classList.add('hidden');
+  }
 });
 
-/* ----------  LOAD USERS  ---------- */
-async function loadUsers(){
-  const snap=await getDocs(collection(db,'users'));
-  usersGrid.innerHTML='';
-  for(const d of snap.docs){
-    const u=d.data();
-    const ban=await getDoc(doc(db,'bans',d.id));
-    u.banned=ban.exists() && (!ban.data().until || Date.now()<ban.data().until.toMillis());
-    const card=document.createElement('div');
-    card.className='user-card';
-    card.innerHTML=`
-      <img class="avatar" src="${u.avatar||'https://via.placeholder.com/80'}" alt="">
-      <div class="display">${u.displayName}${badge(u)}</div>
-      <div class="username">@${u.username}</div>
-      <div class="uid">User #${u.uid}</div>
-      <div class="actions">${actionButtons(u,d.id)}</div>`;
-    card.onclick=e=>{
-      if(e.target.tagName!=='BUTTON')window.open(`/${u.username}`,'_blank');
-    };
-    usersGrid.appendChild(card);
+async function loadUsers() {
+  hideError();
+  loadingContainer.classList.remove('hidden');
+  usersGrid.innerHTML = '';
+  
+  try {
+    const usersSnap = await getDocs(collection(db, 'users'));
+    const bansSnap = await getDocs(collection(db, 'bans'));
+    
+    const banMap = {};
+    bansSnap.forEach(d => {
+      const data = d.data();
+      const isBanned = !data.until || Date.now() < data.until.toMillis();
+      if (isBanned) banMap[d.id] = data;
+    });
+    
+    allUsers = [];
+    usersSnap.forEach(d => {
+      const userData = {...d.data(), userId: d.id};
+      userData.banned = !!banMap[d.id];
+      userData.banData = banMap[d.id] || null;
+      allUsers.push(userData);
+    });
+    
+    // Sort: CEOs first, then Admins, then others
+    allUsers.sort((a, b) => {
+      const rankOrder = {CEO: 0, Admin: 1};
+      const aRank = rankOrder[a.rank] ?? 2;
+      const bRank = rankOrder[b.rank] ?? 2;
+      if (aRank !== bRank) return aRank - bRank;
+      return (a.uid || 0) - (b.uid || 0);
+    });
+    
+    // Update stats
+    totalUsersEl.textContent = allUsers.length;
+    totalAdminsEl.textContent = allUsers.filter(u => u.rank === 'Admin' || u.rank === 'CEO').length;
+    totalBannedEl.textContent = allUsers.filter(u => u.banned).length;
+    
+    allUsers.forEach(user => {
+      const card = createUserCard(user);
+      usersGrid.appendChild(card);
+    });
+    
+    loadingContainer.classList.add('hidden');
+    
+  } catch (e) {
+    showError(`Failed to load users: ${e.message}`);
+    loadingContainer.classList.add('hidden');
   }
 }
 
-function badge(u){
-  if(u.banned)return'<span class="rank banned">BANNED<span class="info-box">This user is currently banned</span></span>';
-  if(u.rank==='CEO')return'<span class="rank ceo">CEO<span class="info-box">CEO of Lyko Lake</span></span>';
-  if(u.rank==='Admin')return'<span class="rank admin">ADMIN<span class="info-box">This Player is an Admin</span></span>';
-  return'';
+function createUserCard(user) {
+  const card = document.createElement('div');
+  card.className = 'user-card';
+  
+  const isCEO = user.rank === 'CEO';
+  const isAdmin = user.rank === 'Admin';
+  const isBanned = user.banned;
+  
+  let badges = '';
+  if (isBanned) badges += '<span class="rank-badge banned">Banned</span>';
+  if (isCEO) badges += '<span class="rank-badge ceo">CEO</span>';
+  else if (isAdmin) badges += '<span class="rank-badge admin">Admin</span>';
+  
+  const joinDate = user.createdAt?.toDate ? user.createdAt.toDate() : new Date(user.createdAt);
+  const joinedStr = joinDate.toLocaleDateString('en-US', {month: 'short', year: 'numeric'});
+  
+  card.innerHTML = `
+    <div class="user-header">
+      <img class="user-avatar" src="${user.avatar || 'https://via.placeholder.com/60'}" alt="${user.displayName}">
+      <div class="user-info">
+        <div class="user-display">
+          ${user.displayName}
+          ${badges}
+        </div>
+        <div class="user-username">@${user.username}</div>
+      </div>
+    </div>
+    <div class="user-meta">
+      <span>👤 User #${user.uid || 'N/A'}</span>
+      <span>📅 ${joinedStr}</span>
+    </div>
+    <div class="actions" id="actions-${user.userId}"></div>
+  `;
+  
+  const actionsDiv = card.querySelector(`#actions-${user.userId}`);
+  
+  if (isCEO) {
+    actionsDiv.innerHTML = '<span style="color:rgba(255,255,255,0.5);font-size:0.9em;font-style:italic;">Protected account</span>';
+  } else {
+    if (isBanned) {
+      const btn = document.createElement('button');
+      btn.className = 'btn success';
+      btn.textContent = 'Unban';
+      btn.onclick = () => unbanUser(user);
+      actionsDiv.appendChild(btn);
+    } else {
+      const banBtn = document.createElement('button');
+      banBtn.className = 'btn danger';
+      banBtn.textContent = 'Ban';
+      banBtn.onclick = () => banUser(user);
+      actionsDiv.appendChild(banBtn);
+    }
+    
+    const muteBtn = document.createElement('button');
+    muteBtn.className = 'btn';
+    muteBtn.textContent = user.muted ? 'Unmute' : 'Mute';
+    muteBtn.onclick = () => muteUser(user);
+    actionsDiv.appendChild(muteBtn);
+    
+    const renameBtn = document.createElement('button');
+    renameBtn.className = 'btn';
+    renameBtn.textContent = 'Rename';
+    renameBtn.onclick = () => renameUser(user);
+    actionsDiv.appendChild(renameBtn);
+    
+    const rankBtn = document.createElement('button');
+    rankBtn.className = 'btn';
+    rankBtn.textContent = 'Change Rank';
+    rankBtn.onclick = () => changeRank(user);
+    actionsDiv.appendChild(rankBtn);
+  }
+  
+  return card;
 }
 
-function actionButtons(u,uid){
-  if(u.rank==='CEO')return'<i style="font-size:.8em;color:rgba(255,255,255,.5)">immutable</i>';
-  return`
-    <button onclick="event.stopPropagation();banUser('${uid}','${u.banned?'unban':'ban'}')">${u.banned?'Unban':'Ban'}</button>
-    <button onclick="event.stopPropagation();muteUser('${uid}')">Mute</button>
-    <button onclick="event.stopPropagation();renameUser('${uid}')">Rename</button>
-    <button onclick="event.stopPropagation();rankUser('${uid}','${u.rank||'Member'}')">Rank</button>`;
-}
-
-/* ----------  ACTIONS  ---------- */
-window.banUser=async(uid,action)=>{
-  if(action==='unban'){
-    show('Unban User','Are you sure you want to unban this user?',async()=>{
-      await deleteDoc(doc(db,'bans',uid));
-      alert('User unbanned');
-    });
-  }else{
-    const body=`
-      <label>Ban Type:</label>
-      <select id="banType">
+async function banUser(user) {
+  const body = `
+    <div class="form-group">
+      <label class="form-label">Ban Type</label>
+      <select id="banType" class="form-select">
         <option value="perm">Permanent</option>
         <option value="temp">Temporary</option>
       </select>
-      <div id="tempOpts" style="display:none;">
-        <label>Duration:</label>
-        <input id="banVal" type="number" min="1" value="1">
-        <select id="banUnit">
-          <option value="s">Seconds</option>
+    </div>
+    <div class="form-group hidden" id="tempFields">
+      <label class="form-label">Duration</label>
+      <div style="display:flex;gap:10px;">
+        <input type="number" id="banDuration" class="form-input" min="1" value="1" style="flex:1;">
+        <select id="banUnit" class="form-select" style="flex:1;">
           <option value="m">Minutes</option>
           <option value="h">Hours</option>
           <option value="d">Days</option>
+          <option value="w">Weeks</option>
           <option value="y">Years</option>
         </select>
       </div>
-      <label>Reason (visible to user):</label>
-      <textarea id="banReason" rows="2" placeholder="No reason given"></textarea>`;
-    show('Ban User',body,async()=>{
-      const type=$('#banType').value,reason=$('#banReason').value.trim()||'No reason given';
-      let until=null;
-      if(type==='temp'){
-        const n=Number($('#banVal').value),u=$('#banUnit').value;
-        const ms={s:1000,m:60000,h:3600000,d:86400000,y:31536000000}[u];
-        until=Timestamp.fromMillis(Date.now()+n*ms);
-      }
-      await setDoc(doc(db,'bans',uid),{until,reason,by:auth.currentUser.uid,at:serverTimestamp()});
-      alert('User banned');
+    </div>
+    <div class="form-group">
+      <label class="form-label">Reason (visible to user)</label>
+      <textarea id="banReason" class="form-textarea" placeholder="Violating terms of service"></textarea>
+    </div>
+  `;
+  
+  showModal(`Ban @${user.username}`, body, async () => {
+    const banType = document.getElementById('banType').value;
+    const reason = document.getElementById('banReason').value.trim() || 'No reason given';
+    
+    let until = null;
+    if (banType === 'temp') {
+      const duration = parseInt(document.getElementById('banDuration').value);
+      const unit = document.getElementById('banUnit').value;
+      const multipliers = {m: 60000, h: 3600000, d: 86400000, w: 604800000, y: 31536000000};
+      const ms = duration * multipliers[unit];
+      until = Timestamp.fromMillis(Date.now() + ms);
+    }
+    
+    await setDoc(doc(db, 'bans', user.userId), {
+      until,
+      reason,
+      by: auth.currentUser.uid,
+      at: serverTimestamp()
     });
-    setTimeout(()=>{
-      $('#banType').onchange=e=>$('#tempOpts').style.display=e.target.value==='perm'?'none':'block';
-    },100);
-  }
-};
-
-window.muteUser=async(uid)=>{
-  show('Mute User','<label>Reason (internal):</label><textarea id="muteReason" rows="2" placeholder="No reason given"></textarea>',async()=>{
-    await updateDoc(doc(db,'users',uid),{muted:true});
-    alert('User muted');
   });
-};
+  
+  setTimeout(() => {
+    const banType = document.getElementById('banType');
+    const tempFields = document.getElementById('tempFields');
+    banType.onchange = () => {
+      tempFields.classList.toggle('hidden', banType.value === 'perm');
+    };
+  }, 100);
+}
 
-window.renameUser=async(uid)=>{
-  const u=(await getDoc(doc(db,'users',uid))).data();
-  const body=`<label>New display name:</label><br><input id="newName" value="${u.displayName}" maxlength="30">`;
-  show('Rename User',body,async()=>{
-    const name=$('#newName').value.trim();
-    if(!name)return alert('Name required');
-    await updateDoc(doc(db,'users',uid),{displayName:name});
-    alert('Name updated');
-  });
-};
+async function unbanUser(user) {
+  const banInfo = user.banData ? `<p style="color:rgba(255,255,255,0.7);margin-bottom:15px;">Reason: ${user.banData.reason}</p>` : '';
+  showModal(
+    `Unban @${user.username}`,
+    `${banInfo}<p style="color:rgba(255,255,255,0.9);">Are you sure you want to unban this user?</p>`,
+    async () => {
+      await deleteDoc(doc(db, 'bans', user.userId));
+    }
+  );
+}
 
-window.rankUser=async(uid,currentRank)=>{
-  const body=`
-    <label>Select Rank:</label>
-    <select id="rankSel">
-      <option value="Member">Member</option>
-      <option value="Admin">Admin</option>
-    </select>`;
-  show('Change Rank',body,async()=>{
-    const rank=$('#rankSel').value;
-    await updateDoc(doc(db,'users',uid),{rank});
-    alert('Rank updated');
+async function muteUser(user) {
+  const action = user.muted ? 'unmute' : 'mute';
+  showModal(
+    `${action.charAt(0).toUpperCase() + action.slice(1)} @${user.username}`,
+    `<p style="color:rgba(255,255,255,0.9);">Are you sure you want to ${action} this user?</p>`,
+    async () => {
+      await updateDoc(doc(db, 'users', user.userId), {muted: !user.muted});
+    }
+  );
+}
+
+async function renameUser(user) {
+  const body = `
+    <div class="form-group">
+      <label class="form-label">New Display Name</label>
+      <input type="text" id="newName" class="form-input" value="${user.displayName}" maxlength="30">
+    </div>
+  `;
+  
+  showModal(`Rename @${user.username}`, body, async () => {
+    const newName = document.getElementById('newName').value.trim();
+    if (!newName) throw new Error('Name cannot be empty');
+    await updateDoc(doc(db, 'users', user.userId), {displayName: newName});
   });
-  setTimeout(()=>{
-    $('#rankSel').value=currentRank;
-  },100);
-};
+}
+
+async function changeRank(user) {
+  const body = `
+    <div class="form-group">
+      <label class="form-label">Select Rank</label>
+      <select id="newRank" class="form-select">
+        <option value="Member">Member</option>
+        <option value="Admin">Admin</option>
+      </select>
+    </div>
+  `;
+  
+  showModal(`Change Rank for @${user.username}`, body, async () => {
+    const newRank = document.getElementById('newRank').value;
+    await updateDoc(doc(db, 'users', user.userId), {rank: newRank});
+  });
+  
+  setTimeout(() => {
+    document.getElementById('newRank').value = user.rank || 'Member';
+  }, 100);
+}
 </script>
+
 </body>
 </html>
