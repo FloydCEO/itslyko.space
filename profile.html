@@ -102,6 +102,13 @@
         .close-button{background:none;border:none;color:rgba(255,255,255,.7);font-size:1.8em;cursor:pointer;transition:color .3s}
         .close-button:hover{color:#22c5a4}
 
+        .hover-card{position:fixed;background:rgba(10,77,77,.98);border:2px solid rgba(34,197,164,.3);border-radius:12px;padding:15px;min-width:200px;max-width:300px;z-index:1003;display:none;backdrop-filter:blur(10px)}
+        .hover-card-avatar{width:60px;height:60px;border-radius:50%;margin-bottom:10px}
+        .hover-card-name{font-weight:600;margin-bottom:5px}
+        .hover-card-username{color:rgba(255,255,255,.6);margin-bottom:5px}
+        .hover-card-rank{font-size:.8em;padding:2px 8px;border-radius:10px;margin-bottom:5px;display:inline-block}
+        .hover-card-date{font-size:.8em;color:rgba(255,255,255,.6)}
+
         .error-message{text-align:center;padding:100px 20px}
         .error-title{font-size:5em;margin-bottom:20px}
         .error-text{font-size:1.5em;color:#22c5a4;margin-bottom:30px}
@@ -183,14 +190,32 @@
             <h2 class="modal-title">Change Profile Picture</h2>
             <button class="close-button" id="closeModal">&times;</button>
         </div>
-        <!-- Modal content same as before -->
+        <div style="text-align:center">
+            <input type="file" id="avatarInput" accept="image/*" style="display:none">
+            <button id="selectAvatar" style="background:rgba(34,197,164,.2);border:2px solid #22c5a4;color:#22c5a4;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600">Select Image</button>
+            <div id="avatarPreview" style="margin-top:20px;display:none">
+                <img id="previewImg" style="max-width:200px;max-height:200px;border-radius:50%;margin-bottom:10px">
+                <br>
+                <button id="uploadAvatar" style="background:rgba(34,197,164,.2);border:2px solid #22c5a4;color:#22c5a4;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:600;margin-right:10px">Upload</button>
+                <button id="cancelAvatar" style="background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:600">Cancel</button>
+            </div>
+        </div>
     </div>
+</div>
+
+<div class="hover-card hidden" id="hoverCard">
+    <img class="hover-card-avatar" id="hoverAvatar" src="" alt="">
+    <div class="hover-card-name" id="hoverName"></div>
+    <div class="hover-card-username" id="hoverUsername"></div>
+    <div class="hover-card-rank hidden" id="hoverRank"></div>
+    <div class="hover-card-date" id="hoverDate"></div>
 </div>
 
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import {getAuth,onAuthStateChanged,signOut} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import {getFirestore,collection,getDocs,doc,getDoc,updateDoc,query,where,addDoc,deleteDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import {getStorage,ref,uploadBytes,getDownloadURL} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
 
 const firebaseConfig = {
     apiKey: "AIzaSyDUBeWvs6kOijqST6FVGirWs2EZ12aAAwU",
@@ -204,6 +229,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 let currentUserId = null;
 let currentUsername = null;
@@ -221,7 +247,7 @@ onAuthStateChanged(auth, async user => {
             document.getElementById('authButton').classList.add('hidden');
             document.getElementById('userMenu').classList.remove('hidden');
             document.getElementById('navDisplayName').textContent = d.displayName;
-            document.getElementById('navProfileLink').href = `/${d.username}`;
+            document.getElementById('navProfileLink').href = `https://lillyko.space/profile.html?u=${d.username}`;
             if (d.avatar) {
                 document.getElementById('navAvatarImg').src = d.avatar;
                 document.getElementById('navAvatarImg').style.display = 'block';
@@ -298,10 +324,16 @@ async function renderProfile(data) {
     document.getElementById('username').textContent = `@${data.username}`;
     document.getElementById('uid').textContent = `User #${data.uid}`;
 
+    // Fix profile picture display
     if (data.avatar) {
         document.getElementById('profileAvatarImg').src = data.avatar;
+        document.getElementById('profileAvatarImg').style.display = 'block';
         document.getElementById('profileAvatar').style.background = 'none';
+    } else {
+        document.getElementById('profileAvatarImg').style.display = 'none';
+        document.getElementById('profileAvatar').style.background = 'linear-gradient(135deg,#22c5a4 0%,#0a8f7a 100%)';
     }
+    
     if (data.bio) {
         document.getElementById('bioText').textContent = data.bio;
         document.getElementById('bioText').classList.remove('bio-placeholder');
@@ -321,6 +353,10 @@ async function renderProfile(data) {
         if (isFollowing) followBtn.classList.add('following');
         followBtn.addEventListener('click', handleFollow);
     }
+
+    // Setup hover effects for avatar and display name
+    setupHoverCard(document.getElementById('profileAvatar'), data);
+    setupHoverCard(document.getElementById('displayName'), data);
 
     // Load stats
     await loadStats();
@@ -452,6 +488,143 @@ document.getElementById('saveBioButton').addEventListener('click', async () => {
         document.getElementById('bioDisplay').classList.remove('hidden');
     } catch (error) {
         console.error('Error updating bio:', error);
+    }
+});
+
+// Avatar upload functionality
+document.getElementById('profileAvatar').addEventListener('click', () => {
+    if (!isOwnProfile) return;
+    document.getElementById('uploadModal').classList.remove('hidden');
+});
+
+document.getElementById('closeModal').addEventListener('click', () => {
+    document.getElementById('uploadModal').classList.add('hidden');
+});
+
+document.getElementById('selectAvatar').addEventListener('click', () => {
+    document.getElementById('avatarInput').click();
+});
+
+document.getElementById('avatarInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('avatarPreview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+document.getElementById('cancelAvatar').addEventListener('click', () => {
+    document.getElementById('uploadModal').classList.add('hidden');
+    document.getElementById('avatarInput').value = '';
+    document.getElementById('avatarPreview').style.display = 'none';
+});
+
+document.getElementById('uploadAvatar').addEventListener('click', async () => {
+    const file = document.getElementById('avatarInput').files[0];
+    if (!file) return;
+
+    try {
+        const storageRef = ref(storage, `avatars/${currentUserId}_${Date.now()}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+        
+        await updateDoc(doc(db, 'users', currentUserId), { avatar: downloadURL });
+        
+        // Update UI
+        document.getElementById('profileAvatarImg').src = downloadURL;
+        document.getElementById('profileAvatarImg').style.display = 'block';
+        document.getElementById('profileAvatar').style.background = 'none';
+        document.getElementById('navAvatarImg').src = downloadURL;
+        document.getElementById('navAvatarImg').style.display = 'block';
+        
+        document.getElementById('uploadModal').classList.add('hidden');
+    } catch (error) {
+        console.error('Error uploading avatar:', error);
+        alert('Failed to upload avatar');
+    }
+});
+
+// Hover card functionality
+let hoverTimeout;
+let currentHoverElement = null;
+
+function setupHoverCard(element, userData) {
+    element.addEventListener('mouseenter', (e) => {
+        currentHoverElement = element;
+        clearTimeout(hoverTimeout);
+        hoverTimeout = setTimeout(() => {
+            showHoverCard(e, userData);
+        }, 500);
+    });
+
+    element.addEventListener('mouseleave', () => {
+        clearTimeout(hoverTimeout);
+        if (!document.getElementById('hoverCard').contains(document.elementFromPoint(event.clientX, event.clientY))) {
+            hideHoverCard();
+        }
+    });
+}
+
+function showHoverCard(e, userData) {
+    const hoverAvatar = document.getElementById('hoverAvatar');
+    const hoverName = document.getElementById('hoverName');
+    const hoverUsername = document.getElementById('hoverUsername');
+    const hoverRank = document.getElementById('hoverRank');
+    const hoverDate = document.getElementById('hoverDate');
+
+    if (userData.avatar) {
+        hoverAvatar.src = userData.avatar;
+        hoverAvatar.style.display = 'block';
+    } else {
+        hoverAvatar.style.display = 'none';
+    }
+
+    hoverName.textContent = userData.displayName;
+    hoverUsername.textContent = `@${userData.username}`;
+    
+    if (userData.rank) {
+        hoverRank.textContent = userData.rank;
+        hoverRank.className = `hover-card-rank ${userData.rank.toLowerCase()}`;
+        if (userData.rank === 'CEO') {
+            hoverRank.style.background = '#ff3b30';
+            hoverRank.style.color = '#fff';
+        } else if (userData.rank === 'Admin') {
+            hoverRank.style.background = '#34c759';
+            hoverRank.style.color = '#fff';
+        }
+        hoverRank.classList.remove('hidden');
+    } else {
+        hoverRank.classList.add('hidden');
+    }
+
+    if (userData.createdAt) {
+        hoverDate.textContent = `Joined ${userData.createdAt.toDate().toLocaleDateString()}`;
+    } else {
+        hoverDate.textContent = '';
+    }
+
+    hoverCard.style.left = e.clientX + 10 + 'px';
+    hoverCard.style.top = e.clientY + 10 + 'px';
+    hoverCard.classList.remove('hidden');
+}
+
+function hideHoverCard() {
+    hoverCard.classList.add('hidden');
+}
+
+document.addEventListener('mousemove', (e) => {
+    if (hoverCard.classList.contains('show')) {
+        const rect = hoverCard.getBoundingClientRect();
+        if (e.clientX < rect.left || e.clientX > rect.right || 
+            e.clientY < rect.top || e.clientY > rect.bottom) {
+            if (!currentHoverElement?.contains(e.target)) {
+                hideHoverCard();
+            }
+        }
     }
 });
 
