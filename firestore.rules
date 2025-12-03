@@ -1,91 +1,85 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper functions
-    function isSignedIn() {
-      return request.auth != null;
-    }
-    
-    function isAdmin() {
-      return isSignedIn() && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin', 'CEO'];
-    }
-    
-    function isCEO() {
-      return isSignedIn() && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank == 'CEO';
-    }
-    
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-    
-    // Metadata collection (for user counter)
-    match /metadata/{document} {
-      allow read: if true;
-      allow write: if true; // Needed for user registration
-    }
-    
-    // Users collection
+    // User profiles - read by all, write by owner
     match /users/{userId} {
-      allow read: if true; // Public profiles
-      allow create: if isSignedIn() && request.auth.uid == userId;
-      allow update: if isOwner(userId) || isAdmin();
-      allow delete: if isCEO();
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Usernames collection (for username lookup)
+    // Usernames - read by all, write by authenticated users
     match /usernames/{username} {
       allow read: if true;
-      allow create: if isSignedIn();
-      allow delete: if isAdmin();
+      allow write: if request.auth != null;
     }
     
-    // Bans collection
-    match /bans/{userId} {
-      allow read: if isAdmin();
-      allow write: if isAdmin();
-    }
-    
-    // Posts collection
+    // Posts - read by all, write by authenticated users
     match /posts/{postId} {
       allow read: if true;
-      allow create: if isSignedIn() && 
-                       request.resource.data.authorId == request.auth.uid &&
-                       !get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('muted', false);
-      allow update: if isOwner(resource.data.authorId) || isAdmin();
-      allow delete: if isOwner(resource.data.authorId) || isAdmin();
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+      allow delete: if request.auth != null;
     }
     
-    // Follows collection
+    // Comments - read by all, write by authenticated users
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && request.auth.uid == resource.data.authorId;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.authorId;
+    }
+    
+    // Likes - read by all, write by authenticated users
+    match /likes/{likeId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+    
+    // Follows - read by all, write by authenticated users
     match /follows/{followId} {
       allow read: if true;
-      allow create: if isSignedIn() && request.resource.data.followerId == request.auth.uid;
-      allow delete: if isSignedIn() && resource.data.followerId == request.auth.uid;
+      allow create: if request.auth != null;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.followerId;
     }
     
-    // Reports collection
+    // Post views - read by all, write by authenticated users
+    match /postViews/{viewId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+    }
+    
+    // Reports - read by admins, write by authenticated users
     match /reports/{reportId} {
-      allow read: if isAdmin();
-      allow create: if isSignedIn();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
     }
     
-    // Admin audit log
+    // Bans - read by all, write by admins
+    match /bans/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Admin logs - read/write by admins
     match /adminLogs/{logId} {
-      allow read: if isAdmin();
-      allow create: if isAdmin();
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
     }
     
-    // Notifications collection
+    // Notifications - read/write by user
     match /notifications/{notificationId} {
-      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+    
+    // Metadata - read by all
+    match /metadata/{doc} {
+      allow read: if true;
+      allow write: if request.auth != null;
     }
   }
 }
