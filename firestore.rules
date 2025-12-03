@@ -1,89 +1,86 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow read access to all documents
-    match /{document=**} {
-      allow read: if true;
-    }
-    
-    // Posts - allow all authenticated users to create, read, update, delete
-    match /posts/{postId} {
-      allow create: if request.auth != null && request.auth.uid != null;
-      allow read: if true;
-      allow update: if request.auth != null && 
-        (request.auth.uid == resource.data.authorId || 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin', 'CEO']);
-      allow delete: if request.auth != null && 
-        (request.auth.uid == resource.data.authorId || 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin', 'CEO']);
-    }
-    
-    // Post views - allow all authenticated users
-    match /postViews/{viewId} {
-      allow create, read: if request.auth != null && request.auth.uid != null;
-    }
-    
-    // Likes - allow all authenticated users
-    match /likes/{likeId} {
-      allow create, read, delete: if request.auth != null && request.auth.uid != null;
-    }
-    
-    // Comments - allow all authenticated users
-    match /comments/{commentId} {
-      allow create, read: if request.auth != null && request.auth.uid != null;
-      allow update, delete: if request.auth != null && 
-        (request.auth.uid == resource.data.authorId || 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin', 'CEO']);
-    }
-    
-    // Users - allow read access to all, update only own profile
+
+    // Helpers
+    function isSignedIn() { return request.auth != null; }
+    function isNotBanned() { return !exists(/databases/$(database)/documents/bans/$(request.auth.uid));}
+    function isOwner(uid) { return request.auth.uid == uid; }
+
+    // Users
     match /users/{userId} {
       allow read: if true;
-      allow update: if request.auth != null && 
-        (request.auth.uid == userId || 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin', 'CEO']);
+      allow write: if isSignedIn() && isOwner(userId) && isNotBanned();
     }
-    
-    // Usernames - allow read access to all
+
+    // Usernames
     match /usernames/{username} {
       allow read: if true;
+      allow write: if isSignedIn() && isOwner(resource.data.userId);
     }
-    
-    // Follows - allow all authenticated users
-    match /follows/{followId} {
-      allow create, read, delete: if request.auth != null && request.auth.uid != null;
+
+    // Posts
+    match /posts/{postId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isNotBanned() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isSignedIn() && (isOwner(resource.data.authorId) || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin','CEO']);
+      allow delete: if isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin','CEO'];
     }
-    
-    // Reports - allow all authenticated users to create and read
-    match /reports/{reportId} {
-      allow create: if request.auth != null && request.auth.uid != null;
-      allow read: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin', 'CEO'];
-      allow update: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin', 'CEO'];
+
+    // Likes
+    match /likes/{likeId} {
+      allow read: if true;
+      allow write: if isSignedIn() && isNotBanned() && request.resource.data.userId == request.auth.uid;
     }
-    
-    // Bans - allow only Admin and CEO
+
+    // Comments
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isNotBanned();
+      allow delete: if isSignedIn() && (isOwner(resource.data.authorId) || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin','CEO']);
+    }
+
+    // Views
+    match /postViews/{viewId} {
+      allow read: if true;
+      allow write: if isSignedIn() && isNotBanned();
+    }
+
+    // Bans
     match /bans/{userId} {
-      allow read: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin', 'CEO'];
-      allow write: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin', 'CEO'];
+      allow read: if isSignedIn() && (isOwner(userId) || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin','CEO']);
+      allow write: if isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin','CEO'];
     }
-    
-    // Admin logs - allow only Admin and CEO
+
+    // Ban Appeals
+    match /banAppeals/{appealId} {
+      allow read: if isSignedIn() && (isOwner(resource.data.userId) || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin','CEO']);
+      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
+      allow update: if isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin','CEO'];
+    }
+
+    // Reports
+    match /reports/{reportId} {
+      allow read: if isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin','CEO'];
+      allow write: if isSignedIn();
+    }
+
+    // Notifications
+    match /notifications/{notifId} {
+      allow read: if isSignedIn() && isOwner(resource.data.userId);
+      allow write: if isSignedIn();
+    }
+
+    // Follows
+    match /follows/{followId} {
+      allow read: if true;
+      allow write: if isSignedIn() && isNotBanned();
+    }
+
+    // Admin Logs
     match /adminLogs/{logId} {
-      allow read: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin', 'CEO'];
-      allow create: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin', 'CEO'];
-    }
-    
-    // Notifications - allow users to read their own notifications
-    match /notifications/{notificationId} {
-      allow read, create, update: if request.auth != null && 
-        (request.auth.uid == resource.data.userId || 
-         request.auth.uid == request.resource.data.userId);
+      allow read: if isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin','CEO'];
+      allow write: if isSignedIn();
     }
   }
 }
