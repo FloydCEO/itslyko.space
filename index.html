@@ -26,6 +26,7 @@
         .notification-bell{position:relative;background:rgba(34,197,164,.2);border:2px solid #22c5a4;color:#fff;padding:10px;border-radius:50%;cursor:pointer;font-size:1.2em;transition:all .3s}
         .notification-bell:hover{background:rgba(34,197,164,.3)}
         .notification-badge{position:absolute;top:-5px;right:-5px;background:#ff3b30;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.7em;font-weight:bold}
+        .notification-bell.has-new{animation:wiggle 0.5s ease-in-out infinite}
         .auth-button{background:rgba(34,197,164,.2);border:2px solid #22c5a4;color:#fff;padding:10px 30px;font-size:1em;border-radius:8px;text-decoration:none;
                     transition:all .3s ease;font-weight:600}
         .auth-button:hover{background:#22c5a4;color:#0a4d4d;transform:translateY(-2px);box-shadow:0 5px 15px rgba(34,197,164,.4)}
@@ -98,19 +99,26 @@
         .comment-submit:hover{background:#22c5a4;color:#0a4d4d}
         .no-posts{text-align:center;padding:60px 20px;color:rgba(255,255,255,.6);font-size:1.2em}
         .loading{text-align:center;padding:40px;color:rgba(255,255,255,.6)}
-        .notification-dropdown{position:absolute;top:calc(100% + 10px);right:0;background:rgba(10,77,77,.98);border:2px solid rgba(34,197,164,.3);border-radius:12px;min-width:300px;max-width:400px;max-height:500px;overflow-y:auto;display:none;z-index:1002}
+        .notification-dropdown{position:absolute;top:calc(100% + 10px);right:0;background:rgba(10,77,77,.98);border:2px solid rgba(34,197,164,.3);border-radius:12px;min-width:300px;max-width:400px;max-height:500px;overflow-y:auto;display:none;z-index:1002;backdrop-filter:blur(10px)}
         .notification-dropdown.show{display:block}
-        .notification-item{padding:15px;border-bottom:1px solid rgba(34,197,164,.1);cursor:pointer}
+        .notification-item{padding:15px;border-bottom:1px solid rgba(34,197,164,.1);cursor:pointer;transition:background .3s}
         .notification-item:hover{background:rgba(34,197,164,.1)}
         .notification-item.unread{background:rgba(34,197,164,.2)}
         .notification-time{font-size:.8em;color:rgba(255,255,255,.6);margin-top:5px}
-        .hover-card{position:fixed;background:rgba(10,77,77,.98);border:2px solid rgba(34,197,164,.3);border-radius:12px;padding:15px;min-width:200px;max-width:300px;z-index:1003;display:none;backdrop-filter:blur(10px)}
-        .hover-card-avatar{width:60px;height:60px;border-radius:50%;margin-bottom:10px}
+        .notification-empty{padding:30px;text-align:center;color:rgba(255,255,255,.5)}
+        .hover-card{position:fixed;background:rgba(10,77,77,.98);border:2px solid rgba(34,197,164,.3);border-radius:12px;padding:15px;min-width:200px;max-width:300px;z-index:1003;display:none;backdrop-filter:blur(10px);pointer-events:none}
+        .hover-card-avatar{width:60px;height:60px;border-radius:50%;margin-bottom:10px;object-fit:cover}
         .hover-card-name{font-weight:600;margin-bottom:5px}
         .hover-card-username{color:rgba(255,255,255,.6);margin-bottom:5px}
         .hover-card-rank{font-size:.8em;padding:2px 8px;border-radius:10px;margin-bottom:5px;display:inline-block}
         .hover-card-date{font-size:.8em;color:rgba(255,255,255,.6)}
+        .post-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:2000;backdrop-filter:blur(5px)}
+        .post-modal{background:rgba(10,77,77,.95);border:2px solid rgba(34,197,164,.3);border-radius:20px;padding:30px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 15px 50px rgba(0,0,0,.5);backdrop-filter:blur(10px)}
+        .post-modal-close{position:absolute;top:15px;right:15px;background:none;border:none;color:rgba(255,255,255,.7);font-size:1.5em;cursor:pointer;transition:color .3s}
+        .post-modal-close:hover{color:#22c5a4}
+        .version-footer{position:fixed;bottom:10px;left:10px;color:rgba(255,255,255,0.5);font-size:0.8em;z-index:1000;pointer-events:none}
         @keyframes fadeIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes wiggle{0%,100%{transform:rotate(0deg)}25%{transform:rotate(-5deg)}75%{transform:rotate(5deg)}}
         @media(max-width:768px){nav{padding:20px;flex-wrap:wrap}.nav-center{order:3;width:100%;margin-top:15px}.welcome-title{font-size:2.5em}}
     </style>
 </head>
@@ -178,6 +186,13 @@
         <div class="hover-card-date" id="hoverDate"></div>
     </div>
 
+    <div class="post-modal-overlay hidden" id="postModalOverlay">
+        <div class="post-modal">
+            <button class="post-modal-close" id="postModalClose">&times;</button>
+            <div id="postModalContent"></div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
@@ -187,7 +202,7 @@
             apiKey: "AIzaSyDUBeWvs6kOijqST6FVGirWs2EZ12aAAwU",
             authDomain: "lyko-lake.firebaseapp.com",
             projectId: "lyko-lake",
-            storageBucket: "lilyko.space",
+            storageBucket: "lyko-lake.firebasestorage.app",
             messagingSenderId: "685592614306",
             appId: "1:685592614306:web:b6a8f6f18407f9c0154efb"
         };
@@ -219,6 +234,8 @@
         const searchInput = document.getElementById('searchInput');
         const searchResults = document.getElementById('searchResults');
         const hoverCard = document.getElementById('hoverCard');
+        const postModalOverlay = document.getElementById('postModalOverlay');
+        const postModalClose = document.getElementById('postModalClose');
 
         // Navigation
         userButton.addEventListener('click', e => {
@@ -230,22 +247,15 @@
             await signOut(auth);
             window.location.reload();
         });
-
         uploadButton.addEventListener('click', () => {
             window.location.href = '/upload';
         });
-
-        // Notification bell functionality
-        notificationBell.addEventListener('click', async () => {
-            notificationDropdown.classList.toggle('show');
-            if (notificationDropdown.classList.contains('show')) {
-                await loadNotifications();
-            }
+        postModalClose.addEventListener('click', () => {
+            postModalOverlay.classList.add('hidden');
         });
-
-        document.addEventListener('click', (e) => {
-            if (!notificationBell.contains(e.target) && !notificationDropdown.contains(e.target)) {
-                notificationDropdown.classList.remove('show');
+        postModalOverlay.addEventListener('click', (e) => {
+            if (e.target === postModalOverlay) {
+                postModalOverlay.classList.add('hidden');
             }
         });
 
@@ -287,7 +297,7 @@
                                 </div>
                             `;
                             item.addEventListener('click', () => {
-                                window.location.href = `https://lillyko.space/profile.html?u=${user.username}`;
+                                window.location.href = `/${user.username}`;
                             });
                             searchResults.appendChild(item);
                         });
@@ -305,7 +315,20 @@
             }
         });
 
-        // Load notifications
+        // Notification system
+        notificationBell.addEventListener('click', async () => {
+            notificationDropdown.classList.toggle('show');
+            if (notificationDropdown.classList.contains('show')) {
+                await loadNotifications();
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!notificationBell.contains(e.target) && !notificationDropdown.contains(e.target)) {
+                notificationDropdown.classList.remove('show');
+            }
+        });
+
         async function loadNotifications() {
             if (!currentUser) return;
             try {
@@ -318,12 +341,15 @@
                 
                 notificationDropdown.innerHTML = '';
                 if (notifSnap.empty) {
-                    notificationDropdown.innerHTML = '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.6)">No notifications</div>';
+                    notificationDropdown.innerHTML = '<div class="notification-empty">Follow More People To Get More Updates</div>';
                     return;
                 }
 
+                let unreadCount = 0;
                 notifSnap.forEach(doc => {
                     const notif = doc.data();
+                    if (!notif.read) unreadCount++;
+                    
                     const item = document.createElement('div');
                     item.className = `notification-item ${notif.read ? '' : 'unread'}`;
                     item.innerHTML = `
@@ -335,13 +361,26 @@
                         if (!notif.read) {
                             await updateDoc(doc(db, 'notifications', doc.id), { read: true });
                         }
-                        if (notif.link) {
+                        if (notif.postId) {
+                            await openPostModal(notif.postId);
+                        } else if (notif.link) {
                             window.location.href = notif.link;
                         }
+                        notificationDropdown.classList.remove('show');
                     });
                     
                     notificationDropdown.appendChild(item);
                 });
+
+                // Update badge
+                if (unreadCount > 0) {
+                    notificationBadge.textContent = unreadCount;
+                    notificationBadge.classList.remove('hidden');
+                    notificationBell.classList.add('has-new');
+                } else {
+                    notificationBadge.classList.add('hidden');
+                    notificationBell.classList.remove('has-new');
+                }
             } catch (error) {
                 console.error('Error loading notifications:', error);
                 notificationDropdown.innerHTML = '<div style="padding:20px;text-align:center;color:#ff3b30">Error loading notifications</div>';
@@ -392,7 +431,7 @@
             }
 
             hoverName.textContent = userData.displayName;
-            hoverUsername.textContent = `@${userData.username}`;
+            hoverUsername.textContent = `@${userData.username} | User #${userData.uid || 'N/A'}`;
             
             if (userData.rank) {
                 hoverRank.textContent = userData.rank;
@@ -436,6 +475,180 @@
             }
         });
 
+        // Post modal functionality
+        async function openPostModal(postId) {
+            try {
+                const postSnap = await getDoc(doc(db, 'posts', postId));
+                if (!postSnap.exists()) return;
+
+                const post = postSnap.data();
+                const authorSnap = await getDoc(doc(db, 'users', post.authorId));
+                const author = authorSnap.exists() ? authorSnap.data() : { displayName: 'Unknown', username: 'unknown' };
+
+                let mediaHtml = '';
+                if (post.mediaUrl) {
+                    if (post.mediaType === 'video') {
+                        mediaHtml = `<div class="post-media"><video controls src="${post.mediaUrl}"></video></div>`;
+                    } else {
+                        mediaHtml = `<div class="post-media"><img src="${post.mediaUrl}" alt="Post media"></div>`;
+                    }
+                }
+
+                const userLikeStatus = await getUserLikeStatus(post.id);
+                const commentCount = await getCommentCount(post.id);
+
+                document.getElementById('postModalContent').innerHTML = `
+                    <div class="post-header">
+                        <img class="post-avatar" src="${author.avatar || 'https://via.placeholder.com/50'}" alt="${author.displayName}">
+                        <div class="post-author">
+                            <div class="post-author-name">${author.displayName}</div>
+                            <div class="post-author-username">@${author.username}</div>
+                        </div>
+                    </div>
+                    <div class="post-content">
+                        ${post.content ? `<div class="post-text">${post.content}</div>` : ''}
+                        ${mediaHtml}
+                    </div>
+                    <div class="post-stats">
+                        <span>👁️ ${post.views || 0} views</span>
+                    </div>
+                    <div class="post-actions">
+                        <button class="action-button like-button ${userLikeStatus === 'like' ? 'liked' : ''}" data-post-id="${post.id}" data-modal="true">
+                            ❤️ <span>${post.likes || 0}</span>
+                        </button>
+                        <button class="action-button dislike-button ${userLikeStatus === 'dislike' ? 'disliked' : ''}" data-post-id="${post.id}" data-modal="true">
+                            💩 <span>${post.dislikes || 0}</span>
+                        </button>
+                        <button class="action-button comment-button" data-post-id="${post.id}" data-modal="true">
+                            💬 <span class="comment-count">${commentCount}</span>
+                        </button>
+                    </div>
+                    <div class="comments-section">
+                        <div class="comments-toggle" data-post-id="${post.id}" data-modal="true">Show Comments</div>
+                        <div class="comments-list" id="modal-comments-${post.id}"></div>
+                        <div class="comment-input-container">
+                            <textarea class="comment-input" placeholder="Add a comment..." data-post-id="${post.id}" data-modal="true"></textarea>
+                            <button class="comment-submit" data-post-id="${post.id}" data-modal="true">Post</button>
+                        </div>
+                    </div>
+                `;
+
+                postModalOverlay.classList.remove('hidden');
+                
+                // Attach event listeners to modal elements
+                attachModalPostActions();
+            } catch (error) {
+                console.error('Error opening post modal:', error);
+            }
+        }
+
+        function attachModalPostActions() {
+            // Like buttons in modal
+            document.querySelectorAll('.post-modal .like-button').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const postId = btn.dataset.postId;
+                    await handleLike(postId, 'like', btn);
+                    // Refresh modal content
+                    await openPostModal(postId);
+                });
+            });
+
+            // Dislike buttons in modal
+            document.querySelectorAll('.post-modal .dislike-button').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const postId = btn.dataset.postId;
+                    await handleLike(postId, 'dislike', btn);
+                    // Refresh modal content
+                    await openPostModal(postId);
+                });
+            });
+
+            // Comment toggle in modal
+            document.querySelectorAll('.post-modal .comments-toggle').forEach(toggle => {
+                toggle.addEventListener('click', async () => {
+                    const postId = toggle.dataset.postId;
+                    const commentsList = document.getElementById(`modal-comments-${postId}`);
+                    
+                    if (commentsList.classList.contains('show')) {
+                        commentsList.classList.remove('show');
+                        toggle.textContent = 'Show Comments';
+                    } else {
+                        await loadModalComments(postId);
+                        commentsList.classList.add('show');
+                        toggle.textContent = 'Hide Comments';
+                    }
+                });
+            });
+
+            // Comment submit in modal
+            document.querySelectorAll('.post-modal .comment-submit').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const postId = btn.dataset.postId;
+                    const input = document.querySelector(`.post-modal .comment-input[data-post-id="${postId}"]`);
+                    const text = input.value.trim();
+                    
+                    if (text) {
+                        try {
+                            await addDoc(collection(db, 'comments'), {
+                                postId,
+                                authorId: currentUser.userId,
+                                text,
+                                createdAt: serverTimestamp()
+                            });
+                            
+                            input.value = '';
+                            await loadModalComments(postId);
+                            
+                            // Update comment count
+                            const countSpan = document.querySelector(`.post-modal .comment-button[data-post-id="${postId}"] .comment-count`);
+                            if (countSpan) {
+                                countSpan.textContent = parseInt(countSpan.textContent) + 1;
+                            }
+                        } catch (error) {
+                            console.error('Comment error:', error);
+                        }
+                    }
+                });
+            });
+        }
+
+        async function loadModalComments(postId) {
+            const commentsList = document.getElementById(`modal-comments-${postId}`);
+            try {
+                const commentsSnap = await getDocs(
+                    query(collection(db, 'comments'),
+                          where('postId', '==', postId),
+                          orderBy('createdAt', 'desc'))
+                );
+                
+                if (commentsSnap.empty) {
+                    commentsList.innerHTML = '<div style="color:rgba(255,255,255,.5);padding:10px">No comments yet</div>';
+                    return;
+                }
+                
+                commentsList.innerHTML = '';
+                for (const commentDoc of commentsSnap.docs) {
+                    const comment = commentDoc.data();
+                    const authorSnap = await getDoc(doc(db, 'users', comment.authorId));
+                    const author = authorSnap.exists() ? authorSnap.data() : { displayName: 'Unknown', avatar: '' };
+                    
+                    const commentItem = document.createElement('div');
+                    commentItem.className = 'comment-item';
+                    commentItem.innerHTML = `
+                        <div class="comment-header">
+                            <img class="comment-avatar" src="${author.avatar || 'https://via.placeholder.com/30'}" alt="${author.displayName}">
+                            <span class="comment-author">${author.displayName}</span>
+                        </div>
+                        <div class="comment-text">${comment.text}</div>
+                    `;
+                    commentsList.appendChild(commentItem);
+                }
+            } catch (error) {
+                console.error('Error loading modal comments:', error);
+                commentsList.innerHTML = '<div style="color:#ff3b30;padding:10px">Error loading comments</div>';
+            }
+        }
+
         onAuthStateChanged(auth, async user => {
             if (user && user.emailVerified) {
                 const snap = await getDoc(doc(db, 'users', user.uid));
@@ -449,7 +662,7 @@
                     feedContainer.classList.remove('hidden');
                     
                     userDisplayName.textContent = currentUser.displayName;
-                    profileLink.href = `https://lillyko.space/profile.html?u=${currentUser.username}`;
+                    profileLink.href = `/${currentUser.username}`;
                     
                     if (currentUser.avatar) {
                         navAvatarImg.src = currentUser.avatar;
@@ -523,7 +736,7 @@
                         await addDoc(collection(db, 'notifications'), {
                             userId: currentUser.userId,
                             message: `${author.displayName} posted new content`,
-                            link: `https://lillyko.space/profile.html?u=${author.username}`,
+                            postId: post.id,
                             type: 'new_post',
                             read: false,
                             createdAt: serverTimestamp()
@@ -535,6 +748,95 @@
                 }
             } catch (error) {
                 console.error('Error checking for new posts:', error);
+            }
+        }
+
+        // Check for comments on user's posts
+        async function checkForNewComments() {
+            if (!currentUser) return;
+
+            try {
+                // Get user's posts
+                const userPostsSnap = await getDocs(
+                    query(collection(db, 'posts'), where('authorId', '==', currentUser.userId))
+                );
+
+                const userPostIds = [];
+                userPostsSnap.forEach(doc => {
+                    userPostIds.push(doc.id);
+                });
+
+                if (userPostIds.length === 0) return;
+
+                // Check for recent comments on user's posts
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+
+                const commentsSnap = await getDocs(
+                    query(
+                        collection(db, 'comments'),
+                        where('postId', 'in', userPostIds),
+                        where('createdAt', '>', Timestamp.fromDate(yesterday))
+                    )
+                );
+
+                const newComments = [];
+                commentsSnap.forEach(doc => {
+                    const comment = doc.data();
+                    // Don't notify about user's own comments
+                    if (comment.authorId !== currentUser.userId) {
+                        const notifKey = `comment_notified_${doc.id}`;
+                        if (!localStorage.getItem(notifKey)) {
+                            newComments.push({ id: doc.id, ...comment });
+                            localStorage.setItem(notifKey, 'true');
+                        }
+                    }
+                });
+
+                if (newComments.length > 0) {
+                    // Create notifications
+                    for (const comment of newComments) {
+                        const authorSnap = await getDoc(doc(db, 'users', comment.authorId));
+                        const author = authorSnap.data();
+                        
+                        await addDoc(collection(db, 'notifications'), {
+                            userId: currentUser.userId,
+                            message: `${author.displayName} commented on your post`,
+                            postId: comment.postId,
+                            type: 'new_comment',
+                            read: false,
+                            createdAt: serverTimestamp()
+                        });
+                    }
+                    
+                    // Update notification badge
+                    await loadNotificationCount();
+                }
+            } catch (error) {
+                console.error('Error checking for new comments:', error);
+            }
+        }
+
+        async function loadNotificationCount() {
+            if (!currentUser) return;
+            try {
+                const notifSnap = await getDocs(
+                    query(collection(db, 'notifications'), 
+                          where('userId', '==', currentUser.userId),
+                          where('read', '==', false))
+                );
+                
+                const count = notifSnap.size;
+                if (count > 0) {
+                    notificationBadge.textContent = count;
+                    notificationBadge.classList.remove('hidden');
+                    notificationBell.classList.add('has-new');
+                } else {
+                    notificationBadge.classList.add('hidden');
+                    notificationBell.classList.remove('has-new');
+                }
+            } catch (error) {
+                console.error('Error loading notification count:', error);
             }
         }
 
@@ -608,7 +910,7 @@
                         </div>
                         ${post.authorId !== currentUser.userId ? `<button class="follow-button ${followBtnClass}" data-author-id="${post.authorId}">${followBtnText}</button>` : ''}
                     </div>
-                    <div class="post-content">
+                    <div class="post-content" style="cursor:pointer" data-post-id="${post.id}">
                         ${post.content ? `<div class="post-text">${post.content}</div>` : ''}
                         ${mediaHtml}
                     </div>
@@ -644,6 +946,11 @@
                 // Setup hover cards for avatar and author
                 setupHoverCard(postCard.querySelector('.post-avatar'), { ...author, userId: post.authorId });
                 setupHoverCard(postCard.querySelector('.post-author'), { ...author, userId: post.authorId });
+
+                // Add click event to post content to open modal
+                postCard.querySelector('.post-content').addEventListener('click', () => {
+                    openPostModal(post.id);
+                });
 
                 // Track view when post becomes active
                 if (i === 0) {
@@ -1014,5 +1321,11 @@
             }
         }
     </script>
+
+    <!-- Version Footer - Please increment version number for major/minor/patch changes -->
+    <div class="version-footer">
+        ©2025 Lyko Sokolov - Lyko Lake v1.0.0
+        <!-- Version format: MAJOR.MINOR.PATCH - Increment MAJOR for major features, MINOR for minor features, PATCH for bug fixes -->
+    </div>
 </body>
 </html>
