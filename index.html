@@ -17,7 +17,7 @@
         .search-bar{width:100%;display:flex;gap:10px;background:rgba(255,255,255,.05);border:2px solid rgba(34,197,164,.3);border-radius:10px;padding:8px 15px}
         .search-bar input{flex:1;background:none;border:none;color:#fff;font-size:1em;outline:none}
         .search-bar input::placeholder{color:rgba(255,255,255,.5)}
-        .search-results{position:absolute;top:100%;left:0;right:0;background:rgba(10,77,77,.98);border:2px solid rgba(34,197,164,.3);border-radius:10px;margin-top:5px;max-height:300px;overflow-y:auto;display:none}
+        .search-results{position:absolute;top:100%;left:0;right:0;background:rgba(10,77,77,.98);border:2px solid rgba(34,197,164,.3);border-radius:10px;margin-top:5px;max-height:300px;overflow-y:auto;display:none;z-index:1001}
         .search-results.show{display:block}
         .search-result-item{padding:12px 15px;cursor:pointer;border-bottom:1px solid rgba(34,197,164,.1);display:flex;align-items:center;gap:10px}
         .search-result-item:hover{background:rgba(34,197,164,.2)}
@@ -63,8 +63,8 @@
         .post-card{display:none}
         .post-card.active{display:block}
         .post-header{display:flex;align-items:center;gap:15px;margin-bottom:15px}
-        .post-avatar{width:50px;height:50px;border-radius:50%;object-fit:cover}
-        .post-author{flex:1}
+        .post-avatar{width:50px;height:50px;border-radius:50%;object-fit:cover;cursor:pointer}
+        .post-author{flex:1;cursor:pointer}
         .post-author-name{font-size:1.2em;font-weight:600;margin-bottom:3px}
         .post-author-username{color:rgba(255,255,255,.6);font-size:.9em}
         .follow-button{background:rgba(34,197,164,.2);border:2px solid #22c5a4;color:#22c5a4;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:.9em;font-weight:600;transition:all .3s}
@@ -80,6 +80,21 @@
         .action-button:hover{background:rgba(255,255,255,.1)}
         .action-button.liked{color:#ff3b30}
         .action-button.disliked{color:#8b4513}
+        .comments-section{margin-top:20px;border-top:2px solid rgba(34,197,164,.2);padding-top:20px}
+        .comments-toggle{color:#22c5a4;cursor:pointer;font-weight:600;margin-bottom:15px;display:inline-block}
+        .comments-toggle:hover{text-decoration:underline}
+        .comments-list{display:none;margin-bottom:15px}
+        .comments-list.show{display:block}
+        .comment-item{background:rgba(255,255,255,.03);border-left:3px solid rgba(34,197,164,.3);padding:12px;margin-bottom:10px;border-radius:5px}
+        .comment-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+        .comment-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover}
+        .comment-author{font-weight:600;font-size:.9em}
+        .comment-text{color:rgba(255,255,255,.8);line-height:1.5;font-size:.95em}
+        .comment-input-container{display:flex;gap:10px;margin-top:15px}
+        .comment-input{flex:1;background:rgba(255,255,255,.05);border:2px solid rgba(34,197,164,.3);border-radius:8px;padding:10px;color:#fff;font-size:.95em;resize:none;min-height:40px}
+        .comment-input:focus{outline:none;border-color:#22c5a4}
+        .comment-submit{background:rgba(34,197,164,.2);border:2px solid #22c5a4;color:#22c5a4;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:600;transition:all .3s}
+        .comment-submit:hover{background:#22c5a4;color:#0a4d4d}
         .no-posts{text-align:center;padding:60px 20px;color:rgba(255,255,255,.6);font-size:1.2em}
         .loading{text-align:center;padding:40px;color:rgba(255,255,255,.6)}
         @keyframes fadeIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
@@ -102,7 +117,7 @@
             </button>
             <button class="upload-button hidden" id="uploadButton">Upload</button>
             <a href="/auth.html" class="auth-button" id="authButton">Sign Up / Login</a>
-            <a href="/admin.html" class="admin-button hidden" id="adminButton">Admin</a>
+            <a href="/admin" class="admin-button hidden" id="adminButton">Admin</a>
             <div class="user-menu hidden" id="userMenu">
                 <button class="user-button" id="userButton">
                     <div class="user-avatar" id="navUserAvatar"><img id="navAvatarImg" src="" alt="Avatar" style="display:none"></div>
@@ -110,7 +125,7 @@
                 </button>
                 <div class="dropdown" id="dropdown">
                     <a class="dropdown-item" id="profileLink"><span>👤</span><span>Profile</span></a>
-                    <a href="/help.html" class="dropdown-item"><span>❓</span><span>Help</span></a>
+                    <a href="/help" class="dropdown-item"><span>❓</span><span>Help</span></a>
                     <div class="dropdown-item logout" id="logoutButton"><span>🚪</span><span>Log Out</span></div>
                 </div>
             </div>
@@ -144,7 +159,7 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { getFirestore, doc, getDoc, collection, getDocs, query, limit, orderBy, setDoc, deleteDoc, where, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, doc, getDoc, collection, getDocs, query, limit, orderBy, setDoc, deleteDoc, where, addDoc, serverTimestamp, updateDoc, increment } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyDUBeWvs6kOijqST6FVGirWs2EZ12aAAwU",
@@ -161,6 +176,7 @@
         let currentUser = null;
         let currentPosts = [];
         let currentPostIndex = 0;
+        let viewedPosts = new Set();
 
         const authButton = document.getElementById('authButton');
         const adminButton = document.getElementById('adminButton');
@@ -192,7 +208,7 @@
         });
 
         uploadButton.addEventListener('click', () => {
-            window.location.href = '/upload.html';
+            window.location.href = '/upload';
         });
 
         // Search functionality
@@ -283,7 +299,6 @@
                     feedContainer.classList.remove('hidden');
                     
                     userDisplayName.textContent = currentUser.displayName;
-                    // FIX: Use clean username URL instead of query parameter
                     profileLink.href = `/${currentUser.username}`;
                     
                     if (currentUser.avatar) {
@@ -291,7 +306,7 @@
                         navAvatarImg.style.display = 'block';
                     }
                     
-                    if (currentUser.rank === 'Admin' || currentUser.rank === 'CEO') {
+                    if (currentUser.rank === 'Admin' || currentUser.rank === 'CEO' || currentUser.customRank) {
                         adminButton.classList.remove('hidden');
                     }
 
@@ -326,7 +341,7 @@
                     return;
                 }
 
-                renderPosts();
+                await renderPosts();
             } catch (error) {
                 console.error('Error loading posts:', error);
                 document.getElementById('postsContainer').innerHTML = '<div class="no-posts">Error loading posts</div>';
@@ -344,6 +359,7 @@
 
                 const postCard = document.createElement('div');
                 postCard.className = `post-card ${i === 0 ? 'active' : ''}`;
+                postCard.dataset.postId = post.id;
                 
                 let mediaHtml = '';
                 if (post.mediaUrl) {
@@ -358,10 +374,12 @@
                 const followBtnText = isFollowing ? 'Following' : 'Follow';
                 const followBtnClass = isFollowing ? 'following' : '';
 
+                const userLikeStatus = await getUserLikeStatus(post.id);
+
                 postCard.innerHTML = `
                     <div class="post-header">
-                        <img class="post-avatar" src="${author.avatar || 'https://via.placeholder.com/50'}" alt="${author.displayName}">
-                        <div class="post-author">
+                        <img class="post-avatar" src="${author.avatar || 'https://via.placeholder.com/50'}" alt="${author.displayName}" onclick="window.location.href='/${author.username}'">
+                        <div class="post-author" onclick="window.location.href='/${author.username}'">
                             <div class="post-author-name">${author.displayName}</div>
                             <div class="post-author-username">@${author.username}</div>
                         </div>
@@ -375,23 +393,103 @@
                         <span>👁️ ${post.views || 0} views</span>
                     </div>
                     <div class="post-actions">
-                        <button class="action-button like-button" data-post-id="${post.id}">
+                        <button class="action-button like-button ${userLikeStatus === 'like' ? 'liked' : ''}" data-post-id="${post.id}">
                             ❤️ <span>${post.likes || 0}</span>
                         </button>
-                        <button class="action-button dislike-button" data-post-id="${post.id}">
+                        <button class="action-button dislike-button ${userLikeStatus === 'dislike' ? 'disliked' : ''}" data-post-id="${post.id}">
                             💩 <span>${post.dislikes || 0}</span>
+                        </button>
+                        <button class="action-button comment-button" data-post-id="${post.id}">
+                            💬 <span class="comment-count">${await getCommentCount(post.id)}</span>
                         </button>
                         <button class="action-button report-button" data-post-id="${post.id}">
                             🚩 Report
                         </button>
                     </div>
+                    <div class="comments-section">
+                        <div class="comments-toggle" data-post-id="${post.id}">Show Comments</div>
+                        <div class="comments-list" id="comments-${post.id}"></div>
+                        <div class="comment-input-container">
+                            <textarea class="comment-input" placeholder="Add a comment..." data-post-id="${post.id}"></textarea>
+                            <button class="comment-submit" data-post-id="${post.id}">Post</button>
+                        </div>
+                    </div>
                 `;
                 
                 container.appendChild(postCard);
+
+                // Track view when post becomes active
+                if (i === 0) {
+                    await trackView(post.id);
+                }
             }
 
             updateCarouselControls();
             attachPostActions();
+        }
+
+        async function trackView(postId) {
+            if (!currentUser || viewedPosts.has(postId)) return;
+            
+            try {
+                const viewDocId = `${currentUser.userId}_${postId}`;
+                const viewRef = doc(db, 'postViews', viewDocId);
+                const viewSnap = await getDoc(viewRef);
+                
+                if (!viewSnap.exists()) {
+                    await setDoc(viewRef, {
+                        userId: currentUser.userId,
+                        postId: postId,
+                        viewedAt: serverTimestamp()
+                    });
+                    
+                    await updateDoc(doc(db, 'posts', postId), {
+                        views: increment(1)
+                    });
+                    
+                    viewedPosts.add(postId);
+                    
+                    // Update view count in UI
+                    const postCard = document.querySelector(`[data-post-id="${postId}"]`);
+                    if (postCard) {
+                        const viewsSpan = postCard.querySelector('.post-stats span');
+                        if (viewsSpan) {
+                            const currentViews = parseInt(viewsSpan.textContent.match(/\d+/)[0]);
+                            viewsSpan.textContent = `👁️ ${currentViews + 1} views`;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error tracking view:', error);
+            }
+        }
+
+        async function getUserLikeStatus(postId) {
+            if (!currentUser) return null;
+            try {
+                const likeSnap = await getDocs(
+                    query(collection(db, 'likes'),
+                          where('userId', '==', currentUser.userId),
+                          where('postId', '==', postId))
+                );
+                if (!likeSnap.empty) {
+                    return likeSnap.docs[0].data().type;
+                }
+                return null;
+            } catch {
+                return null;
+            }
+        }
+
+        async function getCommentCount(postId) {
+            try {
+                const commentsSnap = await getDocs(
+                    query(collection(db, 'comments'), where('postId', '==', postId))
+                );
+                return commentsSnap.size;
+            } catch {
+                return 0;
+            }
         }
 
         async function checkIfFollowing(authorId) {
@@ -414,21 +512,23 @@
             document.getElementById('nextButton').disabled = currentPostIndex === currentPosts.length - 1;
         }
 
-        document.getElementById('prevButton').addEventListener('click', () => {
+        document.getElementById('prevButton').addEventListener('click', async () => {
             if (currentPostIndex > 0) {
                 document.querySelectorAll('.post-card')[currentPostIndex].classList.remove('active');
                 currentPostIndex--;
                 document.querySelectorAll('.post-card')[currentPostIndex].classList.add('active');
                 updateCarouselControls();
+                await trackView(currentPosts[currentPostIndex].id);
             }
         });
 
-        document.getElementById('nextButton').addEventListener('click', () => {
+        document.getElementById('nextButton').addEventListener('click', async () => {
             if (currentPostIndex < currentPosts.length - 1) {
                 document.querySelectorAll('.post-card')[currentPostIndex].classList.remove('active');
                 currentPostIndex++;
                 document.querySelectorAll('.post-card')[currentPostIndex].classList.add('active');
                 updateCarouselControls();
+                await trackView(currentPosts[currentPostIndex].id);
             }
         });
 
@@ -466,12 +566,67 @@
                 });
             });
 
-            // Like/dislike buttons
-            document.querySelectorAll('.like-button, .dislike-button').forEach(btn => {
+            // Like buttons
+            document.querySelectorAll('.like-button').forEach(btn => {
                 btn.addEventListener('click', async () => {
                     const postId = btn.dataset.postId;
-                    const isLike = btn.classList.contains('like-button');
-                    // Implement like/dislike logic here
+                    await handleLike(postId, 'like', btn);
+                });
+            });
+
+            // Dislike buttons
+            document.querySelectorAll('.dislike-button').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const postId = btn.dataset.postId;
+                    await handleLike(postId, 'dislike', btn);
+                });
+            });
+
+            // Comment toggle
+            document.querySelectorAll('.comments-toggle').forEach(toggle => {
+                toggle.addEventListener('click', async () => {
+                    const postId = toggle.dataset.postId;
+                    const commentsList = document.getElementById(`comments-${postId}`);
+                    
+                    if (commentsList.classList.contains('show')) {
+                        commentsList.classList.remove('show');
+                        toggle.textContent = 'Show Comments';
+                    } else {
+                        await loadComments(postId);
+                        commentsList.classList.add('show');
+                        toggle.textContent = 'Hide Comments';
+                    }
+                });
+            });
+
+            // Comment submit
+            document.querySelectorAll('.comment-submit').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const postId = btn.dataset.postId;
+                    const input = document.querySelector(`.comment-input[data-post-id="${postId}"]`);
+                    const text = input.value.trim();
+                    
+                    if (text) {
+                        try {
+                            await addDoc(collection(db, 'comments'), {
+                                postId,
+                                authorId: currentUser.userId,
+                                text,
+                                createdAt: serverTimestamp()
+                            });
+                            
+                            input.value = '';
+                            await loadComments(postId);
+                            
+                            // Update comment count
+                            const countSpan = document.querySelector(`.comment-button[data-post-id="${postId}"] .comment-count`);
+                            if (countSpan) {
+                                countSpan.textContent = parseInt(countSpan.textContent) + 1;
+                            }
+                        } catch (error) {
+                            console.error('Comment error:', error);
+                        }
+                    }
                 });
             });
 
@@ -497,6 +652,124 @@
                     }
                 });
             });
+        }
+
+        async function handleLike(postId, type, button) {
+            try {
+                const likeQuery = query(
+                    collection(db, 'likes'),
+                    where('userId', '==', currentUser.userId),
+                    where('postId', '==', postId)
+                );
+                const likeSnap = await getDocs(likeQuery);
+                
+                const postRef = doc(db, 'posts', postId);
+                const postCard = document.querySelector(`[data-post-id="${postId}"]`);
+                const likeBtn = postCard.querySelector('.like-button');
+                const dislikeBtn = postCard.querySelector('.dislike-button');
+                
+                if (!likeSnap.empty) {
+                    const existingLike = likeSnap.docs[0];
+                    const existingType = existingLike.data().type;
+                    
+                    if (existingType === type) {
+                        // Remove like/dislike
+                        await deleteDoc(existingLike.ref);
+                        await updateDoc(postRef, {
+                            [type === 'like' ? 'likes' : 'dislikes']: increment(-1)
+                        });
+                        
+                        button.classList.remove(type === 'like' ? 'liked' : 'disliked');
+                        const count = parseInt(button.querySelector('span').textContent);
+                        button.querySelector('span').textContent = count - 1;
+                    } else {
+                        // Switch from like to dislike or vice versa
+                        await deleteDoc(existingLike.ref);
+                        await addDoc(collection(db, 'likes'), {
+                            userId: currentUser.userId,
+                            postId,
+                            type,
+                            createdAt: serverTimestamp()
+                        });
+                        
+                        await updateDoc(postRef, {
+                            [existingType === 'like' ? 'likes' : 'dislikes']: increment(-1),
+                            [type === 'like' ? 'likes' : 'dislikes']: increment(1)
+                        });
+                        
+                        if (type === 'like') {
+                            likeBtn.classList.add('liked');
+                            dislikeBtn.classList.remove('disliked');
+                            const likeCount = parseInt(likeBtn.querySelector('span').textContent);
+                            const dislikeCount = parseInt(dislikeBtn.querySelector('span').textContent);
+                            likeBtn.querySelector('span').textContent = likeCount + 1;
+                            dislikeBtn.querySelector('span').textContent = dislikeCount - 1;
+                        } else {
+                            dislikeBtn.classList.add('disliked');
+                            likeBtn.classList.remove('liked');
+                            const likeCount = parseInt(likeBtn.querySelector('span').textContent);
+                            const dislikeCount = parseInt(dislikeBtn.querySelector('span').textContent);
+                            dislikeBtn.querySelector('span').textContent = dislikeCount + 1;
+                            likeBtn.querySelector('span').textContent = likeCount - 1;
+                        }
+                    }
+                } else {
+                    // Add new like/dislike
+                    await addDoc(collection(db, 'likes'), {
+                        userId: currentUser.userId,
+                        postId,
+                        type,
+                        createdAt: serverTimestamp()
+                    });
+                    
+                    await updateDoc(postRef, {
+                        [type === 'like' ? 'likes' : 'dislikes']: increment(1)
+                    });
+                    
+                    button.classList.add(type === 'like' ? 'liked' : 'disliked');
+                    const count = parseInt(button.querySelector('span').textContent);
+                    button.querySelector('span').textContent = count + 1;
+                }
+            } catch (error) {
+                console.error('Like error:', error);
+            }
+        }
+
+        async function loadComments(postId) {
+            const commentsList = document.getElementById(`comments-${postId}`);
+            try {
+                const commentsSnap = await getDocs(
+                    query(collection(db, 'comments'),
+                          where('postId', '==', postId),
+                          orderBy('createdAt', 'desc'))
+                );
+                
+                if (commentsSnap.empty) {
+                    commentsList.innerHTML = '<div style="color:rgba(255,255,255,.5);padding:10px">No comments yet</div>';
+                    return;
+                }
+                
+                commentsList.innerHTML = '';
+                for (const commentDoc of commentsSnap.docs) {
+                    const comment = commentDoc.data();
+                    const authorSnap = await getDoc(doc(db, 'users', comment.authorId));
+                    const author = authorSnap.exists() ? authorSnap.data() : { displayName: 'Unknown', avatar: '' };
+                    
+                    const commentItem = document.createElement('div');
+                    commentItem.className = 'comment-item';
+                    commentItem.innerHTML = `
+                        <div class="comment-header">
+                            <img class="comment-avatar" src="${author.avatar || 'https://via.placeholder.com/30'}" alt="${author.displayName}">
+                            <span class="comment-author">${author.displayName}</span>
+                        </div>
+                        <div class="comment-text">${comment.text}</div>
+                    `;
+                    commentsList.appendChild(commentItem);
+                }
+            } catch (error) {
+                console.error('Error loading comments:', error);
+                commentsList.innerHTML = '<div style="color:#ff3b30;padding:10px">Error loading comments</div>';
+            }
         }
     </script>
 </body>
