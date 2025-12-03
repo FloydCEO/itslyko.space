@@ -1,91 +1,501 @@
-rules_version = '2';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lyko Lake - Home</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;
+             background:linear-gradient(135deg,#0a4d4d 0%,#1a6b6b 50%,#0f3d3d 100%);color:#fff;min-height:100vh}
+        .hidden{display:none!important}
+        nav{background:rgba(10,77,77,.95);backdrop-filter:blur(10px);padding:20px 40px;display:flex;justify-content:space-between;align-items:center;
+            position:sticky;top:0;z-index:1000;box-shadow:0 4px 20px rgba(0,0,0,.3);border-bottom:2px solid rgba(34,197,164,.3)}
+        .logo{font-size:1.8em;font-weight:bold;color:#22c5a4;text-decoration:none;display:flex;align-items:center;gap:10px;transition:transform .3s ease}
+        .logo:hover{transform:scale(1.05)}
+        .nav-center{flex:1;display:flex;justify-content:center;max-width:500px;margin:0 20px}
+        .search-bar{width:100%;display:flex;gap:10px;background:rgba(255,255,255,.05);border:2px solid rgba(34,197,164,.3);border-radius:10px;padding:8px 15px}
+        .search-bar input{flex:1;background:none;border:none;color:#fff;font-size:1em;outline:none}
+        .search-bar input::placeholder{color:rgba(255,255,255,.5)}
+        .search-results{position:absolute;top:100%;left:0;right:0;background:rgba(10,77,77,.98);border:2px solid rgba(34,197,164,.3);border-radius:10px;margin-top:5px;max-height:300px;overflow-y:auto;display:none}
+        .search-results.show{display:block}
+        .search-result-item{padding:12px 15px;cursor:pointer;border-bottom:1px solid rgba(34,197,164,.1);display:flex;align-items:center;gap:10px}
+        .search-result-item:hover{background:rgba(34,197,164,.2)}
+        .search-result-item img{width:40px;height:40px;border-radius:50%;object-fit:cover}
+        .nav-right{display:flex;gap:15px;align-items:center}
+        .notification-bell{position:relative;background:rgba(34,197,164,.2);border:2px solid #22c5a4;color:#fff;padding:10px;border-radius:50%;cursor:pointer;font-size:1.2em;transition:all .3s}
+        .notification-bell:hover{background:rgba(34,197,164,.3)}
+        .notification-badge{position:absolute;top:-5px;right:-5px;background:#ff3b30;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.7em;font-weight:bold}
+        .auth-button{background:rgba(34,197,164,.2);border:2px solid #22c5a4;color:#fff;padding:10px 30px;font-size:1em;border-radius:8px;text-decoration:none;
+                    transition:all .3s ease;font-weight:600}
+        .auth-button:hover{background:#22c5a4;color:#0a4d4d;transform:translateY(-2px);box-shadow:0 5px 15px rgba(34,197,164,.4)}
+        .upload-button{background:rgba(52,199,89,.2);border:2px solid #34c759;color:#fff;padding:10px 30px;font-size:1em;border-radius:8px;cursor:pointer;
+                      transition:all .3s ease;font-weight:600}
+        .upload-button:hover{background:#34c759;color:#0a4d4d;transform:translateY(-2px)}
+        .admin-button{background:rgba(255,59,48,.2);border:2px solid #ff3b30;color:#fff;padding:10px 30px;font-size:1em;border-radius:8px;text-decoration:none;
+                     transition:all .3s ease;font-weight:600}
+        .admin-button:hover{background:#ff3b30;color:#fff;transform:translateY(-2px);box-shadow:0 5px 15px rgba(255,59,48,.4)}
+        .user-menu{position:relative}
+        .user-button{background:rgba(34,197,164,.2);border:2px solid #22c5a4;color:#fff;padding:10px 20px;font-size:1em;border-radius:8px;cursor:pointer;
+                    transition:all .3s ease;font-weight:600;display:flex;align-items:center;gap:10px}
+        .user-button:hover{background:rgba(34,197,164,.3);transform:translateY(-2px)}
+        .user-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#22c5a4 0%,#0a8f7a 100%);display:flex;align-items:center;justify-content:center;font-size:1.2em;overflow:hidden}
+        .user-avatar img{width:100%;height:100%;object-fit:cover}
+        .dropdown{position:absolute;top:calc(100% + 10px);right:0;background:rgba(10,77,77,.98);border:2px solid rgba(34,197,164,.3);border-radius:12px;
+                 min-width:200px;opacity:0;visibility:hidden;transform:translateY(-10px);transition:all .3s ease;box-shadow:0 10px 30px rgba(0,0,0,.5);backdrop-filter:blur(10px)}
+        .dropdown.show{opacity:1;visibility:visible;transform:translateY(0)}
+        .dropdown-item{padding:15px 20px;color:rgba(255,255,255,.9);text-decoration:none;display:flex;align-items:center;gap:12px;cursor:pointer;
+                      border-bottom:1px solid rgba(34,197,164,.1)}
+        .dropdown-item:last-child{border-bottom:none}
+        .dropdown-item:hover{background:rgba(34,197,164,.2);color:#22c5a4}
+        .dropdown-item.logout{color:#ff3b30}
+        .dropdown-item.logout:hover{background:rgba(255,59,48,.2)}
+        .page-container{max-width:1200px;margin:0 auto;padding:60px 40px;min-height:calc(100vh - 80px)}
+        .welcome-section{text-align:center;padding:60px 20px}
+        .welcome-title{font-size:4em;margin-bottom:20px;background:linear-gradient(135deg,#22c5a4 0%,#4dd4b8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .welcome-subtitle{font-size:1.5em;color:rgba(255,255,255,.8);margin-bottom:20px;line-height:1.6}
+        .feed-container{max-width:600px;margin:40px auto}
+        .post-carousel{position:relative;background:rgba(255,255,255,.05);border:2px solid rgba(34,197,164,.3);border-radius:15px;padding:30px;backdrop-filter:blur(10px);min-height:400px}
+        .carousel-controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+        .carousel-button{background:rgba(34,197,164,.2);border:2px solid #22c5a4;color:#22c5a4;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;transition:all .3s}
+        .carousel-button:hover:not(:disabled){background:#22c5a4;color:#0a4d4d}
+        .carousel-button:disabled{opacity:.3;cursor:not-allowed}
+        .post-card{display:none}
+        .post-card.active{display:block}
+        .post-header{display:flex;align-items:center;gap:15px;margin-bottom:15px}
+        .post-avatar{width:50px;height:50px;border-radius:50%;object-fit:cover}
+        .post-author{flex:1}
+        .post-author-name{font-size:1.2em;font-weight:600;margin-bottom:3px}
+        .post-author-username{color:rgba(255,255,255,.6);font-size:.9em}
+        .follow-button{background:rgba(34,197,164,.2);border:2px solid #22c5a4;color:#22c5a4;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:.9em;font-weight:600;transition:all .3s}
+        .follow-button:hover{background:#22c5a4;color:#0a4d4d}
+        .follow-button.following{background:#34c759;border-color:#34c759;color:#fff}
+        .post-content{margin:20px 0}
+        .post-text{color:rgba(255,255,255,.9);line-height:1.6;margin-bottom:15px;white-space:pre-wrap;word-wrap:break-word}
+        .post-media{width:100%;max-height:400px;border-radius:10px;margin-bottom:15px}
+        .post-media img,.post-media video{width:100%;max-height:400px;object-fit:contain;border-radius:10px}
+        .post-stats{display:flex;gap:20px;margin-bottom:15px;color:rgba(255,255,255,.6)}
+        .post-actions{display:flex;gap:20px;padding-top:15px;border-top:1px solid rgba(34,197,164,.2)}
+        .action-button{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;display:flex;align-items:center;gap:8px;font-size:1.1em;transition:all .3s;padding:8px 12px;border-radius:6px}
+        .action-button:hover{background:rgba(255,255,255,.1)}
+        .action-button.liked{color:#ff3b30}
+        .action-button.disliked{color:#8b4513}
+        .no-posts{text-align:center;padding:60px 20px;color:rgba(255,255,255,.6);font-size:1.2em}
+        .loading{text-align:center;padding:40px;color:rgba(255,255,255,.6)}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+        @media(max-width:768px){nav{padding:20px;flex-wrap:wrap}.nav-center{order:3;width:100%;margin-top:15px}.welcome-title{font-size:2.5em}}
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">🌊 Lyko Lake</a>
+        <div class="nav-center hidden" id="navSearch">
+            <div class="search-bar" style="position:relative">
+                <input type="text" id="searchInput" placeholder="Search users...">
+                <div class="search-results" id="searchResults"></div>
+            </div>
+        </div>
+        <div class="nav-right">
+            <button class="notification-bell hidden" id="notificationBell">
+                🔔
+                <span class="notification-badge hidden" id="notificationBadge">0</span>
+            </button>
+            <button class="upload-button hidden" id="uploadButton">Upload</button>
+            <a href="/auth.html" class="auth-button" id="authButton">Sign Up / Login</a>
+            <a href="/admin.html" class="admin-button hidden" id="adminButton">Admin</a>
+            <div class="user-menu hidden" id="userMenu">
+                <button class="user-button" id="userButton">
+                    <div class="user-avatar" id="navUserAvatar"><img id="navAvatarImg" src="" alt="Avatar" style="display:none"></div>
+                    <span id="userDisplayName">Loading...</span>
+                </button>
+                <div class="dropdown" id="dropdown">
+                    <a class="dropdown-item" id="profileLink"><span>👤</span><span>Profile</span></a>
+                    <a href="/help.html" class="dropdown-item"><span>❓</span><span>Help</span></a>
+                    <div class="dropdown-item logout" id="logoutButton"><span>🚪</span><span>Log Out</span></div>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-service cloud.firestore {
-  match /databases/{database}/documents {
-    
-    // Helper functions
-    function isSignedIn() {
-      return request.auth != null;
-    }
-    
-    function isAdmin() {
-      return isSignedIn() && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank in ['Admin', 'CEO'];
-    }
-    
-    function isCEO() {
-      return isSignedIn() && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.rank == 'CEO';
-    }
-    
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-    
-    // Metadata collection (for user counter)
-    match /metadata/{document} {
-      allow read: if true;
-      allow write: if true; // Needed for user registration
-    }
-    
-    // Users collection
-    match /users/{userId} {
-      allow read: if true; // Public profiles
-      allow create: if isSignedIn() && request.auth.uid == userId;
-      allow update: if isOwner(userId) || isAdmin();
-      allow delete: if isCEO();
-    }
-    
-    // Usernames collection (for username lookup)
-    match /usernames/{username} {
-      allow read: if true;
-      allow create: if isSignedIn();
-      allow delete: if isAdmin();
-    }
-    
-    // Bans collection
-    match /bans/{userId} {
-      allow read: if isAdmin();
-      allow write: if isAdmin();
-    }
-    
-    // Posts collection
-    match /posts/{postId} {
-      allow read: if true;
-      allow create: if isSignedIn() && 
-                       request.resource.data.authorId == request.auth.uid &&
-                       !get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('muted', false);
-      allow update: if isOwner(resource.data.authorId) || isAdmin();
-      allow delete: if isOwner(resource.data.authorId) || isAdmin();
-    }
-    
-    // Follows collection
-    match /follows/{followId} {
-      allow read: if true;
-      allow create: if isSignedIn() && request.resource.data.followerId == request.auth.uid;
-      allow delete: if isSignedIn() && resource.data.followerId == request.auth.uid;
-    }
-    
-    // Reports collection
-    match /reports/{reportId} {
-      allow read: if isAdmin();
-      allow create: if isSignedIn();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
-    }
-    
-    // Admin audit log
-    match /adminLogs/{logId} {
-      allow read: if isAdmin();
-      allow create: if isAdmin();
-    }
-    
-    // Notifications collection
-    match /notifications/{notificationId} {
-      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
-    }
-  }
-}
+    <div class="page-container">
+        <div class="welcome-section">
+            <h1 class="welcome-title">Welcome to Lyko Lake</h1>
+            <p class="welcome-subtitle">Where there's no censorship, period.</p>
+            <p style="color:rgba(255,255,255,.7);max-width:700px;margin:20px auto;line-height:1.6">
+                Besides illegal content, we will not censor cursing, NSFW material, or anything of the sort. 
+                This is a space for free expression and creativity.
+            </p>
+        </div>
+
+        <div class="feed-container hidden" id="feedContainer">
+            <div class="post-carousel">
+                <div class="carousel-controls">
+                    <button class="carousel-button" id="prevButton" disabled>← Previous</button>
+                    <span id="postCounter" style="color:rgba(255,255,255,.7)">0 / 0</span>
+                    <button class="carousel-button" id="nextButton" disabled>Next →</button>
+                </div>
+                <div id="postsContainer">
+                    <div class="loading">Loading posts...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, getDoc, collection, getDocs, query, limit, orderBy, setDoc, deleteDoc, where, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDUBeWvs6kOijqST6FVGirWs2EZ12aAAwU",
+            authDomain: "lyko-lake.firebaseapp.com",
+            projectId: "lyko-lake",
+            storageBucket: "lyko-lake.firebasestorage.app",
+            messagingSenderId: "685592614306",
+            appId: "1:685592614306:web:b6a8f6f18407f9c0154efb"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let currentPosts = [];
+        let currentPostIndex = 0;
+
+        const authButton = document.getElementById('authButton');
+        const adminButton = document.getElementById('adminButton');
+        const uploadButton = document.getElementById('uploadButton');
+        const userMenu = document.getElementById('userMenu');
+        const userButton = document.getElementById('userButton');
+        const dropdown = document.getElementById('dropdown');
+        const userDisplayName = document.getElementById('userDisplayName');
+        const profileLink = document.getElementById('profileLink');
+        const logoutButton = document.getElementById('logoutButton');
+        const navUserAvatar = document.getElementById('navUserAvatar');
+        const navAvatarImg = document.getElementById('navAvatarImg');
+        const feedContainer = document.getElementById('feedContainer');
+        const notificationBell = document.getElementById('notificationBell');
+        const notificationBadge = document.getElementById('notificationBadge');
+        const navSearch = document.getElementById('navSearch');
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+
+        // Navigation
+        userButton.addEventListener('click', e => {
+            e.stopPropagation();
+            dropdown.classList.toggle('show');
+        });
+        document.addEventListener('click', () => dropdown.classList.remove('show'));
+        logoutButton.addEventListener('click', async () => {
+            await signOut(auth);
+            window.location.reload();
+        });
+
+        uploadButton.addEventListener('click', () => {
+            window.location.href = '/upload.html';
+        });
+
+        // Search functionality
+        let searchTimeout;
+        searchInput.addEventListener('input', async () => {
+            clearTimeout(searchTimeout);
+            const query = searchInput.value.trim().toLowerCase();
+            
+            if (query.length < 2) {
+                searchResults.classList.remove('show');
+                return;
+            }
+
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const usersSnap = await getDocs(collection(db, 'users'));
+                    const matches = [];
+                    usersSnap.forEach(doc => {
+                        const user = doc.data();
+                        if (user.username.toLowerCase().includes(query) || 
+                            user.displayName.toLowerCase().includes(query)) {
+                            matches.push(user);
+                        }
+                    });
+
+                    searchResults.innerHTML = '';
+                    if (matches.length === 0) {
+                        searchResults.innerHTML = '<div style="padding:15px;color:rgba(255,255,255,.5)">No users found</div>';
+                    } else {
+                        matches.slice(0, 5).forEach(user => {
+                            const item = document.createElement('div');
+                            item.className = 'search-result-item';
+                            item.innerHTML = `
+                                <img src="${user.avatar || 'https://via.placeholder.com/40'}" alt="${user.displayName}">
+                                <div>
+                                    <div style="font-weight:600">${user.displayName}</div>
+                                    <div style="font-size:.9em;color:rgba(255,255,255,.6)">@${user.username}</div>
+                                </div>
+                            `;
+                            item.addEventListener('click', () => {
+                                window.location.href = `/${user.username}`;
+                            });
+                            searchResults.appendChild(item);
+                        });
+                    }
+                    searchResults.classList.add('show');
+                } catch (error) {
+                    console.error('Search error:', error);
+                }
+            }, 300);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!searchResults.contains(e.target) && e.target !== searchInput) {
+                searchResults.classList.remove('show');
+            }
+        });
+
+        // Load notifications
+        async function loadNotifications() {
+            if (!currentUser) return;
+            try {
+                const notifSnap = await getDocs(
+                    query(collection(db, 'notifications'), 
+                          where('userId', '==', currentUser.userId),
+                          where('read', '==', false))
+                );
+                const count = notifSnap.size;
+                if (count > 0) {
+                    notificationBadge.textContent = count;
+                    notificationBadge.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+            }
+        }
+
+        onAuthStateChanged(auth, async user => {
+            if (user && user.emailVerified) {
+                const snap = await getDoc(doc(db, 'users', user.uid));
+                if (snap.exists()) {
+                    currentUser = { ...snap.data(), userId: user.uid };
+                    authButton.classList.add('hidden');
+                    userMenu.classList.remove('hidden');
+                    uploadButton.classList.remove('hidden');
+                    notificationBell.classList.remove('hidden');
+                    navSearch.classList.remove('hidden');
+                    feedContainer.classList.remove('hidden');
+                    
+                    userDisplayName.textContent = currentUser.displayName;
+                    profileLink.href = `/${currentUser.username}`;
+                    if (currentUser.avatar) {
+                        navAvatarImg.src = currentUser.avatar;
+                        navAvatarImg.style.display = 'block';
+                    }
+                    
+                    if (currentUser.rank === 'Admin' || currentUser.rank === 'CEO') {
+                        adminButton.classList.remove('hidden');
+                    }
+
+                    await loadNotifications();
+                    await loadPosts();
+                }
+            } else {
+                authButton.classList.remove('hidden');
+                adminButton.classList.add('hidden');
+                uploadButton.classList.add('hidden');
+                notificationBell.classList.add('hidden');
+                navSearch.classList.add('hidden');
+                userMenu.classList.add('hidden');
+                feedContainer.classList.add('hidden');
+            }
+        });
+
+        // Post loading and carousel
+        async function loadPosts() {
+            try {
+                const postsSnap = await getDocs(collection(db, 'posts'));
+                const allPosts = [];
+                postsSnap.forEach(doc => {
+                    allPosts.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Shuffle and take 10
+                currentPosts = allPosts.sort(() => 0.5 - Math.random()).slice(0, 10);
+                
+                if (currentPosts.length === 0) {
+                    document.getElementById('postsContainer').innerHTML = '<div class="no-posts">No posts yet. Be the first to upload!</div>';
+                    return;
+                }
+
+                renderPosts();
+            } catch (error) {
+                console.error('Error loading posts:', error);
+                document.getElementById('postsContainer').innerHTML = '<div class="no-posts">Error loading posts</div>';
+            }
+        }
+
+        async function renderPosts() {
+            const container = document.getElementById('postsContainer');
+            container.innerHTML = '';
+
+            for (let i = 0; i < currentPosts.length; i++) {
+                const post = currentPosts[i];
+                const authorSnap = await getDoc(doc(db, 'users', post.authorId));
+                const author = authorSnap.exists() ? authorSnap.data() : { displayName: 'Unknown', username: 'unknown' };
+
+                const postCard = document.createElement('div');
+                postCard.className = `post-card ${i === 0 ? 'active' : ''}`;
+                
+                let mediaHtml = '';
+                if (post.mediaUrl) {
+                    if (post.mediaType === 'video') {
+                        mediaHtml = `<div class="post-media"><video controls src="${post.mediaUrl}"></video></div>`;
+                    } else {
+                        mediaHtml = `<div class="post-media"><img src="${post.mediaUrl}" alt="Post media"></div>`;
+                    }
+                }
+
+                const isFollowing = await checkIfFollowing(post.authorId);
+                const followBtnText = isFollowing ? 'Following' : 'Follow';
+                const followBtnClass = isFollowing ? 'following' : '';
+
+                postCard.innerHTML = `
+                    <div class="post-header">
+                        <img class="post-avatar" src="${author.avatar || 'https://via.placeholder.com/50'}" alt="${author.displayName}">
+                        <div class="post-author">
+                            <div class="post-author-name">${author.displayName}</div>
+                            <div class="post-author-username">@${author.username}</div>
+                        </div>
+                        ${post.authorId !== currentUser.userId ? `<button class="follow-button ${followBtnClass}" data-author-id="${post.authorId}">${followBtnText}</button>` : ''}
+                    </div>
+                    <div class="post-content">
+                        ${post.content ? `<div class="post-text">${post.content}</div>` : ''}
+                        ${mediaHtml}
+                    </div>
+                    <div class="post-stats">
+                        <span>👁️ ${post.views || 0} views</span>
+                    </div>
+                    <div class="post-actions">
+                        <button class="action-button like-button" data-post-id="${post.id}">
+                            ❤️ <span>${post.likes || 0}</span>
+                        </button>
+                        <button class="action-button dislike-button" data-post-id="${post.id}">
+                            💩 <span>${post.dislikes || 0}</span>
+                        </button>
+                        <button class="action-button report-button" data-post-id="${post.id}">
+                            🚩 Report
+                        </button>
+                    </div>
+                `;
+                
+                container.appendChild(postCard);
+            }
+
+            updateCarouselControls();
+            attachPostActions();
+        }
+
+        async function checkIfFollowing(authorId) {
+            if (!currentUser) return false;
+            try {
+                const followSnap = await getDocs(
+                    query(collection(db, 'follows'), 
+                          where('followerId', '==', currentUser.userId),
+                          where('followingId', '==', authorId))
+                );
+                return !followSnap.empty;
+            } catch {
+                return false;
+            }
+        }
+
+        function updateCarouselControls() {
+            document.getElementById('postCounter').textContent = `${currentPostIndex + 1} / ${currentPosts.length}`;
+            document.getElementById('prevButton').disabled = currentPostIndex === 0;
+            document.getElementById('nextButton').disabled = currentPostIndex === currentPosts.length - 1;
+        }
+
+        document.getElementById('prevButton').addEventListener('click', () => {
+            if (currentPostIndex > 0) {
+                document.querySelectorAll('.post-card')[currentPostIndex].classList.remove('active');
+                currentPostIndex--;
+                document.querySelectorAll('.post-card')[currentPostIndex].classList.add('active');
+                updateCarouselControls();
+            }
+        });
+
+        document.getElementById('nextButton').addEventListener('click', () => {
+            if (currentPostIndex < currentPosts.length - 1) {
+                document.querySelectorAll('.post-card')[currentPostIndex].classList.remove('active');
+                currentPostIndex++;
+                document.querySelectorAll('.post-card')[currentPostIndex].classList.add('active');
+                updateCarouselControls();
+            }
+        });
+
+        function attachPostActions() {
+            // Follow buttons
+            document.querySelectorAll('.follow-button').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const authorId = btn.dataset.authorId;
+                    const isFollowing = btn.classList.contains('following');
+                    
+                    try {
+                        if (isFollowing) {
+                            const followSnap = await getDocs(
+                                query(collection(db, 'follows'),
+                                      where('followerId', '==', currentUser.userId),
+                                      where('followingId', '==', authorId))
+                            );
+                            followSnap.forEach(async (doc) => {
+                                await deleteDoc(doc.ref);
+                            });
+                            btn.classList.remove('following');
+                            btn.textContent = 'Follow';
+                        } else {
+                            await addDoc(collection(db, 'follows'), {
+                                followerId: currentUser.userId,
+                                followingId: authorId,
+                                createdAt: serverTimestamp()
+                            });
+                            btn.classList.add('following');
+                            btn.textContent = 'Following';
+                        }
+                    } catch (error) {
+                        console.error('Follow error:', error);
+                    }
+                });
+            });
+
+            // Like/dislike buttons
+            document.querySelectorAll('.like-button, .dislike-button').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const postId = btn.dataset.postId;
+                    const isLike = btn.classList.contains('like-button');
+                    // Implement like/dislike logic here
+                });
+            });
+
+            // Report buttons
+            document.querySelectorAll('.report-button').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const postId = btn.dataset.postId;
+                    const reason = prompt('Please describe why you are reporting this post:');
+                    if (reason) {
+                        try {
+                            await addDoc(collection(db, 'reports'), {
+                                postId,
+                                reportedBy: currentUser.userId,
+                                reason,
+                                createdAt: serverTimestamp(),
+                                status: 'pending'
+                            });
+                            alert('Report submitted. Thank you.');
+                        } catch (error) {
+                            console.error('Report error:', error);
+                            alert('Failed to submit report.');
+                        }
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>
