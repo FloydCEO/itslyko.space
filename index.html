@@ -283,7 +283,9 @@
                     feedContainer.classList.remove('hidden');
                     
                     userDisplayName.textContent = currentUser.displayName;
+                    // FIX: Use clean username URL instead of query parameter
                     profileLink.href = `/${currentUser.username}`;
+                    
                     if (currentUser.avatar) {
                         navAvatarImg.src = currentUser.avatar;
                         navAvatarImg.style.display = 'block';
