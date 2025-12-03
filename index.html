@@ -67,6 +67,7 @@
         .post-author{flex:1;cursor:pointer}
         .post-author-name{font-size:1.2em;font-weight:600;margin-bottom:3px}
         .post-author-username{color:rgba(255,255,255,.6);font-size:.9em}
+        .post-date{color:rgba(255,255,255,.5);font-size:.8em}
         .follow-button{background:rgba(34,197,164,.2);border:2px solid #22c5a4;color:#22c5a4;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:.9em;font-weight:600;transition:all .3s}
         .follow-button:hover{background:#22c5a4;color:#0a4d4d}
         .follow-button.following{background:#34c759;border-color:#34c759;color:#fff}
@@ -97,6 +98,18 @@
         .comment-submit:hover{background:#22c5a4;color:#0a4d4d}
         .no-posts{text-align:center;padding:60px 20px;color:rgba(255,255,255,.6);font-size:1.2em}
         .loading{text-align:center;padding:40px;color:rgba(255,255,255,.6)}
+        .notification-dropdown{position:absolute;top:calc(100% + 10px);right:0;background:rgba(10,77,77,.98);border:2px solid rgba(34,197,164,.3);border-radius:12px;min-width:300px;max-width:400px;max-height:500px;overflow-y:auto;display:none;z-index:1002}
+        .notification-dropdown.show{display:block}
+        .notification-item{padding:15px;border-bottom:1px solid rgba(34,197,164,.1);cursor:pointer}
+        .notification-item:hover{background:rgba(34,197,164,.1)}
+        .notification-item.unread{background:rgba(34,197,164,.2)}
+        .notification-time{font-size:.8em;color:rgba(255,255,255,.6);margin-top:5px}
+        .hover-card{position:fixed;background:rgba(10,77,77,.98);border:2px solid rgba(34,197,164,.3);border-radius:12px;padding:15px;min-width:200px;max-width:300px;z-index:1003;display:none;backdrop-filter:blur(10px)}
+        .hover-card-avatar{width:60px;height:60px;border-radius:50%;margin-bottom:10px}
+        .hover-card-name{font-weight:600;margin-bottom:5px}
+        .hover-card-username{color:rgba(255,255,255,.6);margin-bottom:5px}
+        .hover-card-rank{font-size:.8em;padding:2px 8px;border-radius:10px;margin-bottom:5px;display:inline-block}
+        .hover-card-date{font-size:.8em;color:rgba(255,255,255,.6)}
         @keyframes fadeIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
         @media(max-width:768px){nav{padding:20px;flex-wrap:wrap}.nav-center{order:3;width:100%;margin-top:15px}.welcome-title{font-size:2.5em}}
     </style>
@@ -115,6 +128,7 @@
                 🔔
                 <span class="notification-badge hidden" id="notificationBadge">0</span>
             </button>
+            <div class="notification-dropdown hidden" id="notificationDropdown"></div>
             <button class="upload-button hidden" id="uploadButton">Upload</button>
             <a href="/auth.html" class="auth-button" id="authButton">Sign Up / Login</a>
             <a href="/admin" class="admin-button hidden" id="adminButton">Admin</a>
@@ -156,16 +170,24 @@
         </div>
     </div>
 
+    <div class="hover-card hidden" id="hoverCard">
+        <img class="hover-card-avatar" id="hoverAvatar" src="" alt="">
+        <div class="hover-card-name" id="hoverName"></div>
+        <div class="hover-card-username" id="hoverUsername"></div>
+        <div class="hover-card-rank hidden" id="hoverRank"></div>
+        <div class="hover-card-date" id="hoverDate"></div>
+    </div>
+
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { getFirestore, doc, getDoc, collection, getDocs, query, limit, orderBy, setDoc, deleteDoc, where, addDoc, serverTimestamp, updateDoc, increment } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, doc, getDoc, collection, getDocs, query, limit, orderBy, setDoc, deleteDoc, where, addDoc, serverTimestamp, updateDoc, increment, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyDUBeWvs6kOijqST6FVGirWs2EZ12aAAwU",
             authDomain: "lyko-lake.firebaseapp.com",
             projectId: "lyko-lake",
-            storageBucket: "lyko-lake.firebasestorage.app",
+            storageBucket: "lilyko.space",
             messagingSenderId: "685592614306",
             appId: "1:685592614306:web:b6a8f6f18407f9c0154efb"
         };
@@ -192,9 +214,11 @@
         const feedContainer = document.getElementById('feedContainer');
         const notificationBell = document.getElementById('notificationBell');
         const notificationBadge = document.getElementById('notificationBadge');
+        const notificationDropdown = document.getElementById('notificationDropdown');
         const navSearch = document.getElementById('navSearch');
         const searchInput = document.getElementById('searchInput');
         const searchResults = document.getElementById('searchResults');
+        const hoverCard = document.getElementById('hoverCard');
 
         // Navigation
         userButton.addEventListener('click', e => {
@@ -209,6 +233,20 @@
 
         uploadButton.addEventListener('click', () => {
             window.location.href = '/upload';
+        });
+
+        // Notification bell functionality
+        notificationBell.addEventListener('click', async () => {
+            notificationDropdown.classList.toggle('show');
+            if (notificationDropdown.classList.contains('show')) {
+                await loadNotifications();
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!notificationBell.contains(e.target) && !notificationDropdown.contains(e.target)) {
+                notificationDropdown.classList.remove('show');
+            }
         });
 
         // Search functionality
@@ -249,7 +287,7 @@
                                 </div>
                             `;
                             item.addEventListener('click', () => {
-                                window.location.href = `/${user.username}`;
+                                window.location.href = `https://lillyko.space/profile.html?u=${user.username}`;
                             });
                             searchResults.appendChild(item);
                         });
@@ -274,17 +312,129 @@
                 const notifSnap = await getDocs(
                     query(collection(db, 'notifications'), 
                           where('userId', '==', currentUser.userId),
-                          where('read', '==', false))
+                          orderBy('createdAt', 'desc'),
+                          limit(20))
                 );
-                const count = notifSnap.size;
-                if (count > 0) {
-                    notificationBadge.textContent = count;
-                    notificationBadge.classList.remove('hidden');
+                
+                notificationDropdown.innerHTML = '';
+                if (notifSnap.empty) {
+                    notificationDropdown.innerHTML = '<div style="padding:20px;text-align:center;color:rgba(255,255,255,.6)">No notifications</div>';
+                    return;
                 }
+
+                notifSnap.forEach(doc => {
+                    const notif = doc.data();
+                    const item = document.createElement('div');
+                    item.className = `notification-item ${notif.read ? '' : 'unread'}`;
+                    item.innerHTML = `
+                        <div>${notif.message}</div>
+                        <div class="notification-time">${notif.createdAt?.toDate().toLocaleString() || 'Unknown time'}</div>
+                    `;
+                    
+                    item.addEventListener('click', async () => {
+                        if (!notif.read) {
+                            await updateDoc(doc(db, 'notifications', doc.id), { read: true });
+                        }
+                        if (notif.link) {
+                            window.location.href = notif.link;
+                        }
+                    });
+                    
+                    notificationDropdown.appendChild(item);
+                });
             } catch (error) {
                 console.error('Error loading notifications:', error);
+                notificationDropdown.innerHTML = '<div style="padding:20px;text-align:center;color:#ff3b30">Error loading notifications</div>';
             }
         }
+
+        // Hover card functionality
+        let hoverTimeout;
+        let currentHoverElement = null;
+
+        function setupHoverCard(element, userData) {
+            element.addEventListener('mouseenter', (e) => {
+                currentHoverElement = element;
+                clearTimeout(hoverTimeout);
+                hoverTimeout = setTimeout(async () => {
+                    if (!userData.rank && userData.userId) {
+                        const userSnap = await getDoc(doc(db, 'users', userData.userId));
+                        if (userSnap.exists()) {
+                            const fullData = userSnap.data();
+                            userData = { ...userData, ...fullData };
+                        }
+                    }
+                    
+                    showHoverCard(e, userData);
+                }, 500);
+            });
+
+            element.addEventListener('mouseleave', () => {
+                clearTimeout(hoverTimeout);
+                if (!hoverCard.contains(document.elementFromPoint(event.clientX, event.clientY))) {
+                    hideHoverCard();
+                }
+            });
+        }
+
+        function showHoverCard(e, userData) {
+            const hoverAvatar = document.getElementById('hoverAvatar');
+            const hoverName = document.getElementById('hoverName');
+            const hoverUsername = document.getElementById('hoverUsername');
+            const hoverRank = document.getElementById('hoverRank');
+            const hoverDate = document.getElementById('hoverDate');
+
+            if (userData.avatar) {
+                hoverAvatar.src = userData.avatar;
+                hoverAvatar.style.display = 'block';
+            } else {
+                hoverAvatar.style.display = 'none';
+            }
+
+            hoverName.textContent = userData.displayName;
+            hoverUsername.textContent = `@${userData.username}`;
+            
+            if (userData.rank) {
+                hoverRank.textContent = userData.rank;
+                hoverRank.className = `hover-card-rank ${userData.rank.toLowerCase()}`;
+                if (userData.rank === 'CEO') {
+                    hoverRank.style.background = '#ff3b30';
+                    hoverRank.style.color = '#fff';
+                } else if (userData.rank === 'Admin') {
+                    hoverRank.style.background = '#34c759';
+                    hoverRank.style.color = '#fff';
+                }
+                hoverRank.classList.remove('hidden');
+            } else {
+                hoverRank.classList.add('hidden');
+            }
+
+            if (userData.createdAt) {
+                hoverDate.textContent = `Joined ${userData.createdAt.toDate().toLocaleDateString()}`;
+            } else {
+                hoverDate.textContent = '';
+            }
+
+            hoverCard.style.left = e.clientX + 10 + 'px';
+            hoverCard.style.top = e.clientY + 10 + 'px';
+            hoverCard.classList.remove('hidden');
+        }
+
+        function hideHoverCard() {
+            hoverCard.classList.add('hidden');
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            if (hoverCard.classList.contains('show')) {
+                const rect = hoverCard.getBoundingClientRect();
+                if (e.clientX < rect.left || e.clientX > rect.right || 
+                    e.clientY < rect.top || e.clientY > rect.bottom) {
+                    if (!currentHoverElement?.contains(e.target)) {
+                        hideHoverCard();
+                    }
+                }
+            }
+        });
 
         onAuthStateChanged(auth, async user => {
             if (user && user.emailVerified) {
@@ -299,7 +449,7 @@
                     feedContainer.classList.remove('hidden');
                     
                     userDisplayName.textContent = currentUser.displayName;
-                    profileLink.href = `/${currentUser.username}`;
+                    profileLink.href = `https://lillyko.space/profile.html?u=${currentUser.username}`;
                     
                     if (currentUser.avatar) {
                         navAvatarImg.src = currentUser.avatar;
@@ -312,6 +462,7 @@
 
                     await loadNotifications();
                     await loadPosts();
+                    await checkForNewPosts();
                 }
             } else {
                 authButton.classList.remove('hidden');
@@ -324,6 +475,69 @@
             }
         });
 
+        // Check for new posts from followed users
+        async function checkForNewPosts() {
+            if (!currentUser) return;
+            
+            try {
+                const followingSnap = await getDocs(
+                    query(collection(db, 'follows'), where('followerId', '==', currentUser.userId))
+                );
+                
+                const followingIds = [];
+                followingSnap.forEach(doc => {
+                    followingIds.push(doc.data().followingId);
+                });
+
+                if (followingIds.length === 0) return;
+
+                // Check for posts from followed users in the last 24 hours
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+
+                const postsSnap = await getDocs(
+                    query(
+                        collection(db, 'posts'),
+                        where('authorId', 'in', followingIds),
+                        where('createdAt', '>', Timestamp.fromDate(yesterday))
+                    )
+                );
+
+                const newPosts = [];
+                postsSnap.forEach(doc => {
+                    const post = doc.data();
+                    // Check if we already showed this notification
+                    const notifKey = `notified_${doc.id}`;
+                    if (!localStorage.getItem(notifKey)) {
+                        newPosts.push({ id: doc.id, ...post });
+                        localStorage.setItem(notifKey, 'true');
+                    }
+                });
+
+                if (newPosts.length > 0) {
+                    // Create notifications
+                    for (const post of newPosts) {
+                        const authorSnap = await getDoc(doc(db, 'users', post.authorId));
+                        const author = authorSnap.data();
+                        
+                        await addDoc(collection(db, 'notifications'), {
+                            userId: currentUser.userId,
+                            message: `${author.displayName} posted new content`,
+                            link: `https://lillyko.space/profile.html?u=${author.username}`,
+                            type: 'new_post',
+                            read: false,
+                            createdAt: serverTimestamp()
+                        });
+                    }
+                    
+                    // Update notification badge
+                    await loadNotificationCount();
+                }
+            } catch (error) {
+                console.error('Error checking for new posts:', error);
+            }
+        }
+
         // Post loading and carousel
         async function loadPosts() {
             try {
@@ -333,8 +547,12 @@
                     allPosts.push({ id: doc.id, ...doc.data() });
                 });
 
-                // Shuffle and take 10
-                currentPosts = allPosts.sort(() => 0.5 - Math.random()).slice(0, 10);
+                // Sort by newest first
+                currentPosts = allPosts.sort((a, b) => {
+                    const dateA = a.createdAt?.toMillis() || 0;
+                    const dateB = b.createdAt?.toMillis() || 0;
+                    return dateB - dateA;
+                }).slice(0, 10);
                 
                 if (currentPosts.length === 0) {
                     document.getElementById('postsContainer').innerHTML = '<div class="no-posts">No posts yet. Be the first to upload!</div>';
@@ -376,12 +594,17 @@
 
                 const userLikeStatus = await getUserLikeStatus(post.id);
 
+                // Format post date
+                const postDate = post.createdAt?.toDate() || new Date();
+                const dateStr = formatPostDate(postDate);
+
                 postCard.innerHTML = `
                     <div class="post-header">
-                        <img class="post-avatar" src="${author.avatar || 'https://via.placeholder.com/50'}" alt="${author.displayName}" onclick="window.location.href='/${author.username}'">
-                        <div class="post-author" onclick="window.location.href='/${author.username}'">
+                        <img class="post-avatar" src="${author.avatar || 'https://via.placeholder.com/50'}" alt="${author.displayName}" data-user-id="${post.authorId}">
+                        <div class="post-author" data-user-id="${post.authorId}">
                             <div class="post-author-name">${author.displayName}</div>
                             <div class="post-author-username">@${author.username}</div>
+                            <div class="post-date">${dateStr}</div>
                         </div>
                         ${post.authorId !== currentUser.userId ? `<button class="follow-button ${followBtnClass}" data-author-id="${post.authorId}">${followBtnText}</button>` : ''}
                     </div>
@@ -418,6 +641,10 @@
                 
                 container.appendChild(postCard);
 
+                // Setup hover cards for avatar and author
+                setupHoverCard(postCard.querySelector('.post-avatar'), { ...author, userId: post.authorId });
+                setupHoverCard(postCard.querySelector('.post-author'), { ...author, userId: post.authorId });
+
                 // Track view when post becomes active
                 if (i === 0) {
                     await trackView(post.id);
@@ -426,6 +653,21 @@
 
             updateCarouselControls();
             attachPostActions();
+        }
+
+        function formatPostDate(date) {
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            if (days < 7) return `${days}d ago`;
+            
+            return date.toLocaleDateString();
         }
 
         async function trackView(postId) {
